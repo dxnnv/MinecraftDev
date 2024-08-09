@@ -82,7 +82,8 @@
         "parameters": {
           "regex": "[^a-z0-9-_]+",
           "replacement": "_",
-          "maxLength": 64
+          "maxLength": 64,
+          "lowercase": true
         }
       }
     },
