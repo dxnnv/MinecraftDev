@@ -176,9 +176,9 @@
       "openInEditor": true
     },
     {
-      "template": "Config (1.20.2+).java.ft",
+      "template": "Config (1.20.1+).java.ft",
       "destination": "src/main/java/${MAIN_CLASS.packagePath}/Config.java",
-      "condition": "$VERSIONS.minecraft.compareTo($mcver.MC1_20_2) >= 0 && $VERSIONS.minecraft.compareTo($mcver.MC1_21) < 0",
+      "condition": "$VERSIONS.minecraft.compareTo($mcver.MC1_20_1) >= 0 && $VERSIONS.minecraft.compareTo($mcver.MC1_21) < 0",
       "openInEditor": true
     },
     {
