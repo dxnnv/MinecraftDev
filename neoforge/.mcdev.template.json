@@ -181,12 +181,16 @@
     },
     {
       "template": "neoforge.mods.toml.ft",
-      "destination": "src/main/resources/META-INF/neoforge.mods.toml"
+      "destination": "src/main/templates/META-INF/neoforge.mods.toml"
     },
     {
       "template": "MixinsConfig.json.ft",
       "destination": "src/main/resources/${MOD_ID}.mixins.json",
       "condition": "$USE_MIXINS"
+    },
+    {
+      "template": "en_us.json.ft",
+      "destination": "src/main/resources/assets/${MOD_ID}/lang/en_us.json"
     },
     {
       "template": "MainClass.java.ft",
