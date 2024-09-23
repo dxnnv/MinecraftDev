@@ -23,7 +23,7 @@
 #if (${USE_MIXINS})
   "mixins": [
     "${MOD_ID}.mixins.json"
-#if (${SPLIT_SOURCES})
+#if ($SPLIT_SOURCES && $VERSIONS.minecraftVersion.compareTo($mcver.MC1_18) >= 0)
     ,{
       "config": "${MOD_ID}.client.mixins.json",
       "environment": "client"

@@ -23,7 +23,7 @@ java {
     withSourcesJar()
 }
 
-#if ($SPLIT_SOURCES)
+#if ($SPLIT_SOURCES && $VERSIONS.minecraftVersion.compareTo($mcver.MC1_18) >= 0)
 loom {
     splitEnvironmentSourceSets()
 
