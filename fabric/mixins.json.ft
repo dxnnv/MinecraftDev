@@ -7,11 +7,11 @@
   "package": "${MAIN_CLASS.packageName}.mixin.client",
 #end
   "compatibilityLevel": "JAVA_${JAVA_VERSION}",
-#if (!$SPLIT_SOURCES || !$CLIENT)
+#if (!($SPLIT_SOURCES && $VERSIONS.minecraftVersion.compareTo($mcver.MC1_18) >= 0) || !$CLIENT)
   "mixins": [
   ],
 #end
-#if (!$SPLIT_SOURCES || $CLIENT)
+#if (!($SPLIT_SOURCES && $VERSIONS.minecraftVersion.compareTo($mcver.MC1_18) >= 0) || $CLIENT)
   "client": [
   ],
 #end

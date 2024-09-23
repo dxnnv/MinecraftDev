@@ -51,24 +51,25 @@
     {
       "name": "SPLIT_SOURCES",
       "type": "boolean",
-      "default": true
+      "default": true,
+      "visible": {
+        "dependsOn": ["VERSIONS"],
+        "condition": "$VERSIONS.minecraftVersion.compareTo($mcver.MC1_18) >= 0"
+      }
     },
     {
       "name": "CLIENT_SOURCE_SET",
       "type": "string",
       "visible": false,
       "derives": {
-        "parents": ["SPLIT_SOURCES"],
+        "parents": ["VERSIONS", "SPLIT_SOURCES"],
         "select": [
           {
-            "condition": "$SPLIT_SOURCES",
+            "condition": "$SPLIT_SOURCES && $VERSIONS.minecraftVersion.compareTo($mcver.MC1_18) >= 0",
             "value": "client"
-          },
-          {
-            "condition": "!$SPLIT_SOURCES",
-            "value": "main"
           }
-        ]
+        ],
+        "default": "main"
       }
     },
     {
@@ -189,7 +190,7 @@
     {
       "template": "mixins.json.ft",
       "destination": "src/client/resources/${MOD_ID}.client.mixins.json",
-      "condition": "$USE_MIXINS && $SPLIT_SOURCES",
+      "condition": "$USE_MIXINS && $SPLIT_SOURCES && $VERSIONS.minecraftVersion.compareTo($mcver.MC1_18) >= 0",
       "properties": {
         "CLIENT": true
       }
