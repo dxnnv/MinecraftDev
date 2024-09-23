@@ -61,8 +61,14 @@ public class ${MAIN_CLASS.className} {
             output.accept(EXAMPLE_ITEM.get()); // Add the example item to the tab. For your own tabs, this method is preferred over the event
             }).build());
 
+#set($LOADING_CONTEXT_INJECTION = ${VERSIONS.forge.compareTo($semver.parse("52.0.9"))} >= 0)
+#if ($LOADING_CONTEXT_INJECTION)
+    public ${MAIN_CLASS.className}(FMLJavaModLoadingContext context) {
+        IEventBus modEventBus = context.getModEventBus();
+#else
     public ${MAIN_CLASS.className}() {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
+#end
 
         // Register the commonSetup method for modloading
         modEventBus.addListener(this::commonSetup);
@@ -81,7 +87,11 @@ public class ${MAIN_CLASS.className} {
         modEventBus.addListener(this::addCreative);
 
         // Register our mod's ForgeConfigSpec so that Forge can create and load the config file for us
+#if ($LOADING_CONTEXT_INJECTION)
+        context.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
+#else
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, Config.SPEC);
+#end
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {
