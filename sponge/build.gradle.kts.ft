@@ -60,12 +60,6 @@ sponge {
             loadOrder(PluginDependency.LoadOrder.AFTER)
             optional(false)
         }
-        #foreach (${DEPENDENCY} in ${DEPENDENCIES})
-        dependency("${DEPEDENCY}") {
-            loadOrder(PluginDependency.LoadOrder.AFTER)
-            optional(false)
-        }
-        #end
     }
 }
 
