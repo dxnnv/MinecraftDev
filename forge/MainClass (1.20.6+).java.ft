@@ -61,7 +61,7 @@ public class ${MAIN_CLASS.className} {
             output.accept(EXAMPLE_ITEM.get()); // Add the example item to the tab. For your own tabs, this method is preferred over the event
             }).build());
 #set($LOADING_CONTEXT_INJECTION = ${VERSIONS.forge.compareTo($semver.parse("52.0.9"))} >= 0 ||
-        (${VERSIONS.forge.compareTo($semver.parse("50.1.17"))} >= 0 && ${VERSIONS.forge.compareTo($semver.parse("51.0.0"))} < 0)))
+        (${VERSIONS.forge.compareTo($semver.parse("50.1.17"))} >= 0 && ${VERSIONS.forge.compareTo($semver.parse("51.0.0"))} < 0))
 #if ($LOADING_CONTEXT_INJECTION)
     public ${MAIN_CLASS.className}(FMLJavaModLoadingContext context) {
         IEventBus modEventBus = context.getModEventBus();
