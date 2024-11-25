@@ -34,6 +34,7 @@ import com.github.kittinunf.result.getOrNull
 import com.github.kittinunf.result.onError
 import com.intellij.ide.util.projectWizard.WizardContext
 import com.intellij.openapi.application.PathManager
+import com.intellij.openapi.application.writeAction
 import com.intellij.openapi.diagnostic.ControlFlowException
 import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.observable.properties.PropertyGraph
@@ -124,7 +125,7 @@ open class RemoteTemplateProvider : TemplateProvider {
         return doLoadTemplates(context, repo, remoteRepo.innerPath)
     }
 
-    protected fun doLoadTemplates(
+    protected suspend fun doLoadTemplates(
         context: WizardContext,
         repo: MinecraftSettings.TemplateRepo,
         rawInnerPath: String
@@ -140,7 +141,7 @@ open class RemoteTemplateProvider : TemplateProvider {
         val rootFile = fs.refreshAndFindFileByPath(archiveRoot)
             ?: return emptyList()
         val modalityState = context.modalityState
-        rootFile.refreshSync(modalityState)
+        writeAction { rootFile.refreshSync(modalityState) }
 
         val innerPath = replaceVariables(rawInnerPath)
         val repoRoot = if (innerPath.isNotBlank()) {
