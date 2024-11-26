@@ -51,7 +51,7 @@ class BuiltinTemplateProvider : RemoteTemplateProvider() {
             return
         }
 
-        if (doUpdateRepo(indicator, label, builtinRepoUrl)) {
+        if (doUpdateRepo(indicator, label, builtinRepoUrl, RemoteAuthType.NONE, "")) {
             repoUpdated = true
         }
     }
