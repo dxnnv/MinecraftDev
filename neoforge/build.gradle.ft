@@ -1,6 +1,7 @@
 plugins {
     id 'java-library'
     id 'maven-publish'
+    id 'idea'
 #if (${VERSIONS.minecraft.compareTo($mcver.MC1_21)} >= 0)
     id 'net.neoforged.moddev' version '${VERSIONS.moddev}'
 #else
