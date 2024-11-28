@@ -1,6 +1,21 @@
 # Minecraft Development for IntelliJ
 
-## [1.8.2]
+## [Unreleased]
+
+### Added
+
+- [#2391](https://github.com/minecraft-dev/MinecraftDev/issues/2391) Project creator template repo and maven repo authorization
+  - this makes it possible to use private GitHub or GitLab repos, or any URL that requires an HTTP `Authorization` or custom header to access
+  - it also supports authenticating to Maven repos to list versions when using a `maven_artifact_version` property in your template through basic authentication
+
+### Fixed
+
+- [#2394](https://github.com/minecraft-dev/MinecraftDev/issues/2394) `Write-unsafe context` errors when using the project creator
+- [#2406](https://github.com/minecraft-dev/MinecraftDev/issues/2406) `IllegalStateException: Constraint inSmartMode cannot be satisfied` when opening a project
+- [#2382](https://github.com/minecraft-dev/MinecraftDev/issues/2382) No Parchment version was selectable when using a version of Minecraft that Parchment doesn't support explicitly
+  - In this case, the creator will now select the latest version available for the latest Minecraft version supported by Parchment
+
+## [1.8.2] - 2024-10-05
 
 ### Added
 
