@@ -14,6 +14,8 @@
 - [#2406](https://github.com/minecraft-dev/MinecraftDev/issues/2406) `IllegalStateException: Constraint inSmartMode cannot be satisfied` when opening a project
 - [#2382](https://github.com/minecraft-dev/MinecraftDev/issues/2382) No Parchment version was selectable when using a version of Minecraft that Parchment doesn't support explicitly
   - In this case, the creator will now select the latest version available for the latest Minecraft version supported by Parchment
+- [#2408](https://github.com/minecraft-dev/MinecraftDev/issues/2408) External translation annotations are not attached
+  - This happens because IntelliJ IDEA disables external annotations by default in 2024.3, which we rely on for this feature, an opt-out setting has been added to force-enable external annotations in Minecraft projects.
 
 ## [1.8.2] - 2024-10-05
 
