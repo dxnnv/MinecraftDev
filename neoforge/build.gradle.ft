@@ -75,7 +75,11 @@ neoForge {
         }
 
         data {
-            data()
+            #if ($VERSIONS.minecraft.compareTo($semver.parse("1.21.4")) < 0)
+                data()
+            #else
+                clientData()
+            #end
 
             // example of overriding the workingDirectory set in configureEach above, uncomment if you want to use it
             // gameDirectory = project.file('run-data')

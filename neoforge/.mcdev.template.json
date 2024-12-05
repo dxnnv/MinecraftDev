@@ -206,7 +206,12 @@
     {
       "template": "Config (1.21+).java.ft",
       "destination": "src/main/java/${MAIN_CLASS.packagePath}/Config.java",
-      "condition": "$LANGUAGE=='Java' && $VERSIONS.minecraft.compareTo($mcver.MC1_21) >= 0"
+      "condition": "$LANGUAGE=='Java' && $VERSIONS.minecraft.compareTo($mcver.MC1_21) >= 0 && $VERSIONS.minecraft.compareTo($semver.parse('1.21.3')) < 0"
+    },
+    {
+      "template": "Config (1.21.3+).java.ft",
+      "destination": "src/main/java/${MAIN_CLASS.packagePath}/Config.java",
+      "condition": "$LANGUAGE=='Java' && $VERSIONS.minecraft.compareTo($semver.parse('1.21.3')) >= 0"
     },
     {
       "template": "MainClass.kt.ft",
