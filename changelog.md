@@ -16,6 +16,7 @@
   - In this case, the creator will now select the latest version available for the latest Minecraft version supported by Parchment
 - [#2408](https://github.com/minecraft-dev/MinecraftDev/issues/2408) External translation annotations are not attached
   - This happens because IntelliJ IDEA disables external annotations by default in 2024.3, which we rely on for this feature, an opt-out setting has been added to force-enable external annotations in Minecraft projects.
+- Cases where references to client sources in fabric.mod.json were not resolved
 
 ## [1.8.2] - 2024-10-05
 
