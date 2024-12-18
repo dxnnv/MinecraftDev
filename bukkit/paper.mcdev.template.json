@@ -84,7 +84,7 @@
     {
       "name": "USE_PAPER_MANIFEST",
       "type": "boolean",
-      "default": true
+      "default": false
     },
     {
       "label": "creator.ui.optional_settings.label",
