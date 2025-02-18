@@ -741,7 +741,10 @@
                                         implementationClass="com.demonwav.mcdev.platform.mixin.insight.MixinLineMarkerProvider"/>
         <codeInsight.lineMarkerProvider language="JAVA"
                                         implementationClass="com.demonwav.mcdev.platform.mixin.insight.MixinElementLineMarkerProvider"/>
+        <codeInsight.lineMarkerProvider language="JAVA"
+                                        implementationClass="com.demonwav.mcdev.platform.mixin.insight.target.MixinTargetLineMarkerProvider"/>
 
+        <!-- Mixin Code Vision Providers -->
         <codeInsight.daemonBoundCodeVisionProvider implementation="com.demonwav.mcdev.platform.mixin.insight.target.MixinTargetCodeVisionProvider"/>
         <codeInsight.daemonBoundCodeVisionProvider implementation="com.demonwav.mcdev.platform.mixin.insight.target.AccessorTargetCodeVisionProvider"/>
 

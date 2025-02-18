@@ -53,8 +53,7 @@ class AccessorTargetCodeVisionProvider : AbstractMixinTargetCodeVisionProvider()
 
     override fun handleClick(editor: Editor, element: PsiElement, event: MouseEvent?) {
         val project = editor.project ?: return
-        val file = element.containingFile ?: return
         val targetClass = element.findReferencedClass() ?: return
-        FindMixinsAction.openFindMixinsUI(project, editor, file, targetClass) { it.isAccessorMixin }
+        FindMixinsAction.openFindMixinsUI(project, targetClass) { it.isAccessorMixin }
     }
 }

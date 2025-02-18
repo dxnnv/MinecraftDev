@@ -57,7 +57,7 @@ class MixinLineMarkerProvider : LineMarkerProviderDescriptor(), GutterIconNaviga
             { "Go to target class" },
             this,
             GutterIconRenderer.Alignment.LEFT,
-            { "mixin target class indicator" },
+            { "mixin class indicator" },
         )
     }
 
