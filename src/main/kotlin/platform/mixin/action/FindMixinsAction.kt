@@ -74,7 +74,7 @@ class FindMixinsAction : AnAction() {
                 // Check all classes with the Mixin annotation
                 val classes = AnnotatedElementsSearch.searchPsiClasses(
                     mixinAnnotation,
-                    GlobalSearchScope.projectScope(project),
+                    GlobalSearchScope.allScope(project),
                 )
                     .filter {
                         indicator?.text = "Checking ${it.name}..."
