@@ -33,7 +33,9 @@ import com.intellij.openapi.actionSystem.CommonDataKeys.CARET
 import com.intellij.openapi.actionSystem.CommonDataKeys.EDITOR
 import com.intellij.openapi.actionSystem.CommonDataKeys.PROJECT
 import com.intellij.openapi.actionSystem.CommonDataKeys.PSI_FILE
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.runReadAction
+import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.runBackgroundableTask
 import com.intellij.openapi.project.Project
@@ -42,6 +44,7 @@ import com.intellij.openapi.wm.ToolWindowFactory
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiClass
+import com.intellij.psi.PsiFile
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.searches.AnnotatedElementsSearch
 import com.intellij.psi.util.PsiModificationTracker
@@ -87,27 +90,26 @@ class FindMixinsAction : AnAction() {
                 classes
             }
         }
-    }
 
-    override fun actionPerformed(e: AnActionEvent) {
-        val project = e.getData(PROJECT) ?: return
-        val file = e.getData(PSI_FILE) ?: return
-        val caret = e.getData(CARET) ?: return
-        val editor = e.getData(EDITOR) ?: return
+        fun openFindMixinsUI(
+            project: Project,
+            editor: Editor,
+            file: PsiFile,
+            targetClass: PsiClass,
+            filter: (PsiClass) -> Boolean = { true }
+        ) {
+            ApplicationManager.getApplication().assertIsDispatchThread()
 
-        val element = file.findElementAt(caret.offset) ?: return
-        val classOfElement = element.findReferencedClass() ?: return
-
-        invokeLater {
             runBackgroundableTask("Searching for Mixins", project, true) run@{ indicator ->
                 indicator.isIndeterminate = true
 
                 val classes = runReadAction {
-                    if (!classOfElement.isValid) {
+                    if (!targetClass.isValid) {
                         return@runReadAction null
                     }
 
-                    val classes = findMixins(classOfElement, project, indicator) ?: return@runReadAction null
+                    val classes = findMixins(targetClass, project, indicator)?.filter(filter)
+                        ?: return@runReadAction null
 
                     when (classes.size) {
                         0 -> null
@@ -126,13 +128,27 @@ class FindMixinsAction : AnAction() {
                         val window = twManager.getToolWindow(TOOL_WINDOW_ID)!!
                         val component = FindMixinsComponent(classes)
                         val content = ContentFactory.getInstance().createContent(component.panel, null, false)
-                        content.displayName = classOfElement.qualifiedName ?: classOfElement.name
+                        content.displayName = targetClass.qualifiedName ?: targetClass.name
                         window.contentManager.addContent(content)
 
                         window.activate(null)
                     }
                 }
             }
+        }
+    }
+
+    override fun actionPerformed(e: AnActionEvent) {
+        val project = e.getData(PROJECT) ?: return
+        val file = e.getData(PSI_FILE) ?: return
+        val caret = e.getData(CARET) ?: return
+        val editor = e.getData(EDITOR) ?: return
+
+        val element = file.findElementAt(caret.offset) ?: return
+        val classOfElement = element.findReferencedClass() ?: return
+
+        invokeLater {
+            openFindMixinsUI(project, editor, file, classOfElement)
         }
     }
 }
