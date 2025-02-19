@@ -714,11 +714,6 @@
                  implementationClass="com.demonwav.mcdev.platform.mixin.completion.MixinCompletionWeigher"
                  id="mcdev.mixin" order="first"/>
 
-        <facet.toolWindow anchor="bottom" icon="/assets/icons/mixin/mixin_class_gutter.png" canCloseContents="true"
-                          doNotActivateOnStart="true" facetIdList="minecraft" showOnStripeByDefault="false"
-                          factoryClass="com.demonwav.mcdev.platform.mixin.action.FindMixinsAction$TWFactory"
-                          id="Find Mixins"/>
-
         <!-- Mixin configuration -->
         <fileType name="Mixin Json Configuration" language="JSON"
                   implementationClass="com.demonwav.mcdev.platform.mixin.config.MixinConfigFileType$Json"
