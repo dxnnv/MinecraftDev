@@ -76,7 +76,7 @@ class MixinElementLineMarkerProvider : LineMarkerProviderDescriptor() {
         return LineMarkerInfo(
             identifier,
             identifier.textRange,
-            icon,
+            handler.icon,
             { "Go to the $simpleName target" },
             MixinGutterIconNavigationHandler(identifier.createSmartPointer(), annotation.createSmartPointer(), handler),
             GutterIconRenderer.Alignment.LEFT,

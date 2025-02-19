@@ -20,6 +20,7 @@
 
 package com.demonwav.mcdev.platform.mixin.handlers
 
+import com.demonwav.mcdev.asset.MixinAssets
 import com.demonwav.mcdev.platform.mixin.util.FieldTargetMember
 import com.demonwav.mcdev.platform.mixin.util.MixinConstants.Annotations.ACCESSOR
 import com.demonwav.mcdev.platform.mixin.util.MixinTargetMember
@@ -107,6 +108,8 @@ class AccessorHandler : MixinMemberAnnotationHandler {
     }
 
     override val isEntryPoint = false
+
+    override val icon = MixinAssets.MIXIN_ACCESSOR_ICON
 
     data class AccessorInfo(val name: String, val type: AccessorType)
 

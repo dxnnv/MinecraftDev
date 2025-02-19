@@ -33,9 +33,9 @@ import com.intellij.psi.PsiIdentifier
 import com.intellij.ui.awt.RelativePoint
 import java.awt.event.MouseEvent
 
-class MixinTargetLineMarkerProvider : LineMarkerProviderDescriptor(), GutterIconNavigationHandler<PsiIdentifier> {
-    override fun getName() = "Mixin target line marker"
-    override fun getIcon() = MixinAssets.MIXIN_TARGET_CLASS_ICON
+class MixinAccessorTargetLineMarkerProvider : LineMarkerProviderDescriptor(), GutterIconNavigationHandler<PsiIdentifier> {
+    override fun getName() = "Accessor mixin target line marker"
+    override fun getIcon() = MixinAssets.MIXIN_TARGET_ACCESSOR_MIXIN_ICON
 
     override fun getLineMarkerInfo(element: PsiElement) = null
 
@@ -51,7 +51,7 @@ class MixinTargetLineMarkerProvider : LineMarkerProviderDescriptor(), GutterIcon
             val identifier = element.nameIdentifier ?: continue
 
             val mixins = FindMixinsAction.findMixins(element, element.project) ?: continue
-            if (mixins.all { it.isAccessorMixin }) {
+            if (mixins.none { it.isAccessorMixin }) {
                 continue
             }
 
@@ -59,10 +59,10 @@ class MixinTargetLineMarkerProvider : LineMarkerProviderDescriptor(), GutterIcon
                 identifier,
                 identifier.textRange,
                 icon,
-                { "Go to mixins" },
+                { "Go to accessor mixins" },
                 this,
                 GutterIconRenderer.Alignment.LEFT,
-                { "mixin target class indicator" },
+                { "accessor mixin target class indicator" },
             )
         }
     }
@@ -74,7 +74,7 @@ class MixinTargetLineMarkerProvider : LineMarkerProviderDescriptor(), GutterIcon
             targetClass,
             { show(RelativePoint(e)) }
         ) {
-            !it.isAccessorMixin
+            it.isAccessorMixin
         }
     }
 }

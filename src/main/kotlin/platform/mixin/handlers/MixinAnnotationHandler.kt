@@ -20,6 +20,7 @@
 
 package com.demonwav.mcdev.platform.mixin.handlers
 
+import com.demonwav.mcdev.asset.MixinAssets
 import com.demonwav.mcdev.platform.mixin.handlers.injectionPoint.InsnResolutionInfo
 import com.demonwav.mcdev.platform.mixin.util.MixinConstants
 import com.demonwav.mcdev.platform.mixin.util.MixinTargetMember
@@ -43,6 +44,7 @@ import com.intellij.psi.util.PsiModificationTracker
 import com.intellij.serviceContainer.BaseKeyedLazyInstance
 import com.intellij.util.KeyedLazyInstance
 import com.intellij.util.xmlb.annotations.Attribute
+import javax.swing.Icon
 import org.objectweb.asm.tree.ClassNode
 
 interface MixinAnnotationHandler {
@@ -82,6 +84,8 @@ interface MixinAnnotationHandler {
      * i.e. not reported as unused
      */
     val isEntryPoint: Boolean
+
+    val icon: Icon get() = MixinAssets.MIXIN_ELEMENT_ICON
 
     companion object {
         private val EP_NAME = ExtensionPointName<KeyedLazyInstance<MixinAnnotationHandler>>(

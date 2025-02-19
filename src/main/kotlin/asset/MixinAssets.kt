@@ -22,14 +22,30 @@ package com.demonwav.mcdev.asset
 
 @Suppress("unused")
 object MixinAssets : Assets() {
-    val MIXIN_ELEMENT_ICON = loadIcon("/assets/icons/mixin/mixin_element.svg")
-    val MIXIN_ELEMENT_ICON_DARK = loadIcon("/assets/icons/mixin/mixin_element_dark.svg")
+    val MIXIN_ACCESSOR_ICON = loadIcon("/assets/icons/mixin/mixin_accessor.svg")
+    val MIXIN_ACCESSOR_ICON_DARK = loadIcon("/assets/icons/mixin/mixin_accessor_dark.svg")
+
+    val MIXIN_ACCESSOR_MIXIN_ICON = loadIcon("/assets/icons/mixin/mixin_accessor_mixin.svg")
+    val MIXIN_ACCESSOR_MIXIN_ICON_DARK = loadIcon("/assets/icons/mixin/mixin_accessor_mixin_dark.svg")
 
     val MIXIN_CLASS_ICON = loadIcon("/assets/icons/mixin/mixin_class_gutter.svg")
     val MIXIN_CLASS_ICON_DARK = loadIcon("/assets/icons/mixin/mixin_class_gutter_dark.svg")
 
-    val MIXIN_CLASS_TARGET_ICON = loadIcon("/assets/icons/mixin/mixin_class_target_gutter.svg")
-    val MIXIN_CLASS_TARGET_ICON_DARK = loadIcon("/assets/icons/mixin/mixin_class_target_gutter_dark.svg")
+    val MIXIN_ELEMENT_ICON = loadIcon("/assets/icons/mixin/mixin_element.svg")
+    val MIXIN_ELEMENT_ICON_DARK = loadIcon("/assets/icons/mixin/mixin_element_dark.svg")
+
+    val MIXIN_INJECTOR_ICON = loadIcon("/assets/icons/mixin/mixin_injector.svg")
+    val MIXIN_INJECTOR_ICON_DARK = loadIcon("/assets/icons/mixin/mixin_injector_dark.svg")
+
+    val MIXIN_SHADOW_ICON = loadIcon("/assets/icons/mixin/mixin_shadow.svg")
+    val MIXIN_SHADOW_ICON_DARK = loadIcon("/assets/icons/mixin/mixin_shadow_dark_alt.svg")
+
+    val MIXIN_TARGET_ACCESSOR_MIXIN_ICON = loadIcon("/assets/icons/mixin/mixin_target_accessor_mixin.svg")
+    val MIXIN_TARGET_ACCESSOR_MIXIN_ICON_DARK = loadIcon("/assets/icons/mixin/mixin_target_accessor_mixin_dark.svg")
+
+    val MIXIN_TARGET_CLASS_ICON = loadIcon("/assets/icons/mixin/mixin_target_class_gutter.svg")
+    val MIXIN_TARGET_CLASS_ICON_DARK = loadIcon("/assets/icons/mixin/mixin_target_class_gutter_dark.svg")
 
     val MIXIN_MARK = loadIcon("/assets/icons/mixin/mixin_mark.svg")
+    val ACCESSOR_MARK = loadIcon("/assets/icons/mixin/accessor_mark.svg")
 }

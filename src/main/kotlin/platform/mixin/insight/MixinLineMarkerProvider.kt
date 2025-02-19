@@ -22,6 +22,7 @@ package com.demonwav.mcdev.platform.mixin.insight
 
 import com.demonwav.mcdev.asset.MixinAssets
 import com.demonwav.mcdev.platform.mixin.util.findSourceClass
+import com.demonwav.mcdev.platform.mixin.util.isAccessorMixin
 import com.demonwav.mcdev.platform.mixin.util.isMixin
 import com.demonwav.mcdev.platform.mixin.util.mixinTargets
 import com.intellij.codeInsight.daemon.GutterIconNavigationHandler
@@ -48,6 +49,12 @@ class MixinLineMarkerProvider : LineMarkerProviderDescriptor(), GutterIconNaviga
         val identifier = element.nameIdentifier ?: return null
         if (!element.isMixin) {
             return null
+        }
+
+        val icon = if (element.isAccessorMixin) {
+            MixinAssets.MIXIN_ACCESSOR_MIXIN_ICON
+        } else {
+            icon
         }
 
         return LineMarkerInfo(

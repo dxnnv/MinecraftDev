@@ -20,6 +20,7 @@
 
 package com.demonwav.mcdev.platform.mixin.handlers
 
+import com.demonwav.mcdev.asset.MixinAssets
 import com.demonwav.mcdev.platform.mixin.handlers.injectionPoint.InsnResolutionInfo
 import com.demonwav.mcdev.platform.mixin.util.FieldTargetMember
 import com.demonwav.mcdev.platform.mixin.util.MethodTargetMember
@@ -101,6 +102,8 @@ class ShadowHandler : MixinMemberAnnotationHandler {
     }
 
     override val isEntryPoint = false
+
+    override val icon = MixinAssets.MIXIN_SHADOW_ICON
 
     companion object {
         fun getInstance(): ShadowHandler? {
