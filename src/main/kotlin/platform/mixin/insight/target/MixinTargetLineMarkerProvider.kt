@@ -29,6 +29,7 @@ import com.intellij.openapi.editor.markup.GutterIconRenderer
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiIdentifier
+import com.intellij.ui.awt.RelativePoint
 import java.awt.event.MouseEvent
 
 class MixinTargetLineMarkerProvider : LineMarkerProviderDescriptor(), GutterIconNavigationHandler<PsiIdentifier> {
@@ -67,6 +68,6 @@ class MixinTargetLineMarkerProvider : LineMarkerProviderDescriptor(), GutterIcon
 
     override fun navigate(e: MouseEvent, elt: PsiIdentifier) {
         val targetClass = elt.parent as? PsiClass ?: return
-        FindMixinsAction.openFindMixinsUI(targetClass.project, targetClass)
+        FindMixinsAction.openFindMixinsUI(targetClass.project, targetClass, { show(RelativePoint(e)) })
     }
 }

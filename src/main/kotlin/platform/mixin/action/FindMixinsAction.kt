@@ -26,6 +26,7 @@ import com.demonwav.mcdev.util.cached
 import com.demonwav.mcdev.util.findReferencedClass
 import com.demonwav.mcdev.util.fullQualifiedName
 import com.demonwav.mcdev.util.invokeLater
+import com.intellij.codeInsight.navigation.getPsiElementPopup
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys.CARET
@@ -36,23 +37,15 @@ import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.runBackgroundableTask
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.wm.ToolWindow
-import com.intellij.openapi.wm.ToolWindowFactory
-import com.intellij.openapi.wm.ToolWindowManager
+import com.intellij.openapi.ui.popup.JBPopup
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiClass
+import com.intellij.psi.PsiElement
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.searches.AnnotatedElementsSearch
 import com.intellij.psi.util.PsiModificationTracker
-import com.intellij.ui.content.ContentFactory
 
 class FindMixinsAction : AnAction() {
-
-    class TWFactory : ToolWindowFactory {
-        override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
-        }
-    }
-
     companion object {
         private const val TOOL_WINDOW_ID = "Find Mixins"
 
@@ -87,7 +80,12 @@ class FindMixinsAction : AnAction() {
             }
         }
 
-        fun openFindMixinsUI(project: Project, targetClass: PsiClass, filter: (PsiClass) -> Boolean = { true }) {
+        fun openFindMixinsUI(
+            project: Project,
+            targetClass: PsiClass,
+            showPopup: JBPopup.() -> Unit,
+            filter: (PsiClass) -> Boolean = { true }
+        ) {
             ApplicationManager.getApplication().assertIsDispatchThread()
 
             runBackgroundableTask("Searching for Mixins", project, true) run@{ indicator ->
@@ -112,16 +110,12 @@ class FindMixinsAction : AnAction() {
 
                 invokeLater {
                     if (classes.size == 1) {
-                        classes.single().navigate(true)
+                        val mixinClass = classes.single()
+                        if (mixinClass.canNavigate()) {
+                            mixinClass.navigate(true)
+                        }
                     } else {
-                        val twManager = ToolWindowManager.getInstance(project)
-                        val window = twManager.getToolWindow(TOOL_WINDOW_ID)!!
-                        val component = FindMixinsComponent(classes)
-                        val content = ContentFactory.getInstance().createContent(component.panel, null, false)
-                        content.displayName = targetClass.qualifiedName ?: targetClass.name
-                        window.contentManager.addContent(content)
-
-                        window.activate(null)
+                        getPsiElementPopup(classes.toTypedArray<PsiElement>(), "Choose mixin").showPopup()
                     }
                 }
             }
@@ -137,7 +131,7 @@ class FindMixinsAction : AnAction() {
         val classOfElement = element.findReferencedClass() ?: return
 
         invokeLater {
-            openFindMixinsUI(project, classOfElement)
+            openFindMixinsUI(project, classOfElement, { showInBestPositionFor(e.dataContext) })
         }
     }
 }

@@ -29,6 +29,7 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
+import com.intellij.ui.awt.RelativePoint
 import java.awt.event.MouseEvent
 
 class AccessorTargetCodeVisionProvider : AbstractMixinTargetCodeVisionProvider() {
@@ -54,6 +55,18 @@ class AccessorTargetCodeVisionProvider : AbstractMixinTargetCodeVisionProvider()
     override fun handleClick(editor: Editor, element: PsiElement, event: MouseEvent?) {
         val project = editor.project ?: return
         val targetClass = element.findReferencedClass() ?: return
-        FindMixinsAction.openFindMixinsUI(project, targetClass) { it.isAccessorMixin }
+        FindMixinsAction.openFindMixinsUI(
+            project,
+            targetClass,
+            {
+                if (event != null) {
+                    show(RelativePoint(event))
+                } else {
+                    showInBestPositionFor(editor)
+                }
+            }
+        ) {
+            it.isAccessorMixin
+        }
     }
 }
