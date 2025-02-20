@@ -714,45 +714,46 @@ private fun findContainingMethod(clazz: ClassNode, lambdaMethod: MethodNode): Pa
     return null
 }
 
-private fun findAssociatedLambda(psiClass: PsiClass, clazz: ClassNode, lambdaMethod: MethodNode): PsiElement? {
+private fun findAssociatedLambda(project: Project, scope: GlobalSearchScope, clazz: ClassNode, lambdaMethod: MethodNode): PsiElement? {
     return RecursionManager.doPreventingRecursion(lambdaMethod, false) {
         val pair = findContainingMethod(clazz, lambdaMethod) ?: return@doPreventingRecursion null
         val (containingMethod, locationInfo) = pair
-        val parent = findAssociatedLambda(psiClass, clazz, containingMethod)
-            ?: psiClass.findMethods(containingMethod.memberReference).firstOrNull()
-            ?: return@doPreventingRecursion null
+        val containingBodyElements = findAssociatedLambda(project, scope, clazz, containingMethod)?.let(::listOf)
+            ?: containingMethod.findBodyElements(clazz, project, scope).ifEmpty { return@doPreventingRecursion null }
 
-        val psiFile = psiClass.containingFile ?: return@doPreventingRecursion null
+        val psiFile = containingBodyElements.first().containingFile ?: return@doPreventingRecursion null
         val matcher = locationInfo.createMatcher<PsiElement>(psiFile)
-        parent.accept(
-            object : JavaRecursiveElementWalkingVisitor() {
-                override fun visitAnonymousClass(aClass: PsiAnonymousClass) {
-                    // skip anonymous classes
-                }
-
-                override fun visitClass(aClass: PsiClass) {
-                    // skip inner classes
-                }
-
-                override fun visitLambdaExpression(expression: PsiLambdaExpression) {
-                    if (matcher.accept(expression)) {
-                        stopWalking()
+        for (bodyElement in containingBodyElements) {
+            bodyElement.accept(
+                object : JavaRecursiveElementWalkingVisitor() {
+                    override fun visitAnonymousClass(aClass: PsiAnonymousClass) {
+                        // skip anonymous classes
                     }
-                    // skip walking inside the lambda
-                }
 
-                override fun visitMethodReferenceExpression(expression: PsiMethodReferenceExpression) {
-                    // walk inside the reference first, visits the qualifier first (it's first in the bytecode)
-                    super.visitMethodReferenceExpression(expression)
+                    override fun visitClass(aClass: PsiClass) {
+                        // skip inner classes
+                    }
 
-                    if (expression.hasSyntheticMethod) {
+                    override fun visitLambdaExpression(expression: PsiLambdaExpression) {
                         if (matcher.accept(expression)) {
                             stopWalking()
                         }
+                        // skip walking inside the lambda
                     }
-                }
-            },
-        )
+
+                    override fun visitMethodReferenceExpression(expression: PsiMethodReferenceExpression) {
+                        // walk inside the reference first, visits the qualifier first (it's first in the bytecode)
+                        super.visitMethodReferenceExpression(expression)
+
+                        if (expression.hasSyntheticMethod) {
+                            if (matcher.accept(expression)) {
+                                stopWalking()
+                            }
+                        }
+                    }
+                },
+            )
+        }
 
         matcher.result
     }
@@ -979,7 +980,7 @@ fun MethodNode.findSourceElement(
         // don't walk into stub compiled elements to look for lambdas
         return null
     }
-    return findAssociatedLambda(psiClass, clazz, this)
+    return findAssociatedLambda(project, scope, clazz, this)
 }
 
 fun MethodNode.findBodyElements(clazz: ClassNode, project: Project, scope: GlobalSearchScope): List<PsiElement> {
