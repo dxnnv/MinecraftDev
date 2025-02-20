@@ -228,13 +228,16 @@ class AtResolver(
             canDecompile = true,
         ) ?: return emptyList()
         val targetPsiClass = targetElement.parentOfType<PsiClass>() ?: return emptyList()
+        val targetPsiFile = targetPsiClass.containingFile ?: return emptyList()
 
         val navigationVisitor = injectionPoint.createNavigationVisitor(at, target, targetPsiClass) ?: return emptyList()
         navigationVisitor.configureBytecodeTarget(targetClass, targetMethod)
         targetElement.accept(navigationVisitor)
 
         return bytecodeResults.mapNotNull { bytecodeResult ->
-            navigationVisitor.result.getOrNull(bytecodeResult.index)
+            val matcher = bytecodeResult.sourceLocationInfo.createMatcher<PsiElement>(targetPsiFile)
+            navigationVisitor.result.forEach(matcher::accept)
+            matcher.result
         }
     }
 

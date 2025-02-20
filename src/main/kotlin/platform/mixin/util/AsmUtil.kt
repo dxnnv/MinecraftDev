@@ -30,7 +30,6 @@ import com.demonwav.mcdev.util.findMethods
 import com.demonwav.mcdev.util.findModule
 import com.demonwav.mcdev.util.findQualifiedClass
 import com.demonwav.mcdev.util.fullQualifiedName
-import com.demonwav.mcdev.util.hasSyntheticMethod
 import com.demonwav.mcdev.util.isErasureEquivalentTo
 import com.demonwav.mcdev.util.lockedCached
 import com.demonwav.mcdev.util.loggerForTopLevel
@@ -96,6 +95,7 @@ import org.objectweb.asm.tree.FieldNode
 import org.objectweb.asm.tree.InsnList
 import org.objectweb.asm.tree.InsnNode
 import org.objectweb.asm.tree.InvokeDynamicInsnNode
+import org.objectweb.asm.tree.LineNumberNode
 import org.objectweb.asm.tree.MethodInsnNode
 import org.objectweb.asm.tree.MethodNode
 import org.objectweb.asm.tree.VarInsnNode
@@ -660,13 +660,18 @@ fun MethodNode.findSuperConstructorCall(): AbstractInsnNode? {
     return null
 }
 
-private fun findContainingMethod(clazz: ClassNode, lambdaMethod: MethodNode): Pair<MethodNode, Int>? {
+private fun findContainingMethod(clazz: ClassNode, lambdaMethod: MethodNode): Pair<MethodNode, SourceCodeLocationInfo>? {
     if (!lambdaMethod.hasAccess(Opcodes.ACC_SYNTHETIC)) {
         return null
     }
     clazz.methods?.forEach { method ->
         var lambdaCount = 0
+        var lineNumber: Int? = null
+        val lambdaCountPerLine = mutableMapOf<Int, Int>()
         method.instructions?.iterator()?.forEach nextInsn@{ insn ->
+            if (insn is LineNumberNode) {
+                lineNumber = insn.line
+            }
             if (insn !is InvokeDynamicInsnNode) return@nextInsn
             if (insn.bsm.owner != "java/lang/invoke/LambdaMetafactory") return@nextInsn
             val invokedMethod = when (insn.bsm.name) {
@@ -691,9 +696,13 @@ private fun findContainingMethod(clazz: ClassNode, lambdaMethod: MethodNode): Pa
             }
 
             lambdaCount++
+            val lambdaCountThisLine =
+                lineNumber?.let { lambdaCountPerLine.merge(it, 1, Int::plus) } ?: lambdaCount
 
             if (invokedMethod.name == lambdaMethod.name && invokedMethod.desc == lambdaMethod.desc) {
-                return@findContainingMethod method to (lambdaCount - 1)
+                val locationInfo =
+                    SourceCodeLocationInfo(lambdaCount - 1, lineNumber, lambdaCountThisLine - 1)
+                return@findContainingMethod method to locationInfo
             }
         }
     }
@@ -704,12 +713,13 @@ private fun findContainingMethod(clazz: ClassNode, lambdaMethod: MethodNode): Pa
 private fun findAssociatedLambda(psiClass: PsiClass, clazz: ClassNode, lambdaMethod: MethodNode): PsiElement? {
     return RecursionManager.doPreventingRecursion(lambdaMethod, false) {
         val pair = findContainingMethod(clazz, lambdaMethod) ?: return@doPreventingRecursion null
-        val (containingMethod, index) = pair
+        val (containingMethod, locationInfo) = pair
         val parent = findAssociatedLambda(psiClass, clazz, containingMethod)
             ?: psiClass.findMethods(containingMethod.memberReference).firstOrNull()
             ?: return@doPreventingRecursion null
-        var i = 0
-        var result: PsiElement? = null
+
+        val psiFile = psiClass.containingFile ?: return@doPreventingRecursion null
+        val matcher = locationInfo.createMatcher<PsiElement>(psiFile)
         parent.accept(
             object : JavaRecursiveElementWalkingVisitor() {
                 override fun visitAnonymousClass(aClass: PsiAnonymousClass) {
@@ -721,8 +731,7 @@ private fun findAssociatedLambda(psiClass: PsiClass, clazz: ClassNode, lambdaMet
                 }
 
                 override fun visitLambdaExpression(expression: PsiLambdaExpression) {
-                    if (i++ == index) {
-                        result = expression
+                    if (matcher.accept(expression)) {
                         stopWalking()
                     }
                     // skip walking inside the lambda
@@ -732,16 +741,14 @@ private fun findAssociatedLambda(psiClass: PsiClass, clazz: ClassNode, lambdaMet
                     // walk inside the reference first, visits the qualifier first (it's first in the bytecode)
                     super.visitMethodReferenceExpression(expression)
 
-                    if (expression.hasSyntheticMethod) {
-                        if (i++ == index) {
-                            result = expression
-                            stopWalking()
-                        }
+                    if (matcher.accept(expression)) {
+                        stopWalking()
                     }
                 }
             },
         )
-        result
+
+        matcher.result
     }
 }
 

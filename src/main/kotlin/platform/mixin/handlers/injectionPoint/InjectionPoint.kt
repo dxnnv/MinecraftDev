@@ -22,6 +22,7 @@ package com.demonwav.mcdev.platform.mixin.handlers.injectionPoint
 
 import com.demonwav.mcdev.platform.mixin.reference.MixinSelector
 import com.demonwav.mcdev.platform.mixin.reference.toMixinString
+import com.demonwav.mcdev.platform.mixin.util.SourceCodeLocationInfo
 import com.demonwav.mcdev.platform.mixin.util.fakeResolve
 import com.demonwav.mcdev.platform.mixin.util.findOrConstructSourceMethod
 import com.demonwav.mcdev.util.constantStringValue
@@ -60,6 +61,7 @@ import com.intellij.util.xmlb.annotations.Attribute
 import org.objectweb.asm.tree.AbstractInsnNode
 import org.objectweb.asm.tree.ClassNode
 import org.objectweb.asm.tree.InsnList
+import org.objectweb.asm.tree.LineNumberNode
 import org.objectweb.asm.tree.MethodInsnNode
 import org.objectweb.asm.tree.MethodNode
 
@@ -385,6 +387,7 @@ abstract class CollectVisitor<T : PsiElement>(protected val mode: Mode) {
 
     private lateinit var method: MethodNode
     private var nextIndex = 0
+    private val nextIndexByLine = mutableMapOf<Int, Int>()
     val result = mutableListOf<Result<T>>()
     private val resultFilters = mutableListOf<Pair<String, CollectResultFilter<T>>>()
     var filterToBlame: String? = null
@@ -416,14 +419,18 @@ abstract class CollectVisitor<T : PsiElement>(protected val mode: Mode) {
             }
         }
 
+        val index = nextIndex++
+        val lineNumber = getLineNumber(insn)
+        val indexInLineNumber = lineNumber?.let { nextIndexByLine.merge(it, 1, Int::plus)!! - 1 } ?: index
         val result = Result(
-            nextIndex++,
+            SourceCodeLocationInfo(index, lineNumber, indexInLineNumber),
             insn,
             shiftedInsn ?: return,
             element,
             qualifier,
             if (insn === shiftedInsn) decorations else emptyMap()
         )
+
         var isFiltered = false
         for ((name, filter) in resultFilters) {
             if (!filter(result, method)) {
@@ -442,6 +449,18 @@ abstract class CollectVisitor<T : PsiElement>(protected val mode: Mode) {
         }
     }
 
+    private fun getLineNumber(insn: AbstractInsnNode): Int? {
+        var i: AbstractInsnNode? = insn
+        while (i != null) {
+            if (i is LineNumberNode) {
+                return i.line
+            }
+            i = i.previous
+        }
+
+        return null
+    }
+
     @Suppress("MemberVisibilityCanBePrivate")
     protected fun stopWalking() {
         throw StopWalkingException()
@@ -454,13 +473,15 @@ abstract class CollectVisitor<T : PsiElement>(protected val mode: Mode) {
     }
 
     data class Result<T : PsiElement>(
-        val index: Int,
+        val sourceLocationInfo: SourceCodeLocationInfo,
         val originalInsn: AbstractInsnNode,
         val insn: AbstractInsnNode,
         val target: T,
         val qualifier: String? = null,
         val decorations: Map<String, Any?>
-    )
+    ) {
+        val index: Int get() = sourceLocationInfo.index
+    }
 
     enum class Mode { MATCH_ALL, MATCH_FIRST, COMPLETION }
 }
