@@ -26,7 +26,7 @@ import com.demonwav.mcdev.platform.mixin.inspection.MixinInspection
 import com.demonwav.mcdev.platform.mixin.reference.MethodReference
 import com.demonwav.mcdev.platform.mixin.util.MixinConstants
 import com.demonwav.mcdev.platform.mixin.util.MixinConstants.Annotations.COERCE
-import com.demonwav.mcdev.platform.mixin.util.findSuperConstructorCall
+import com.demonwav.mcdev.platform.mixin.util.findDelegateConstructorCall
 import com.demonwav.mcdev.platform.mixin.util.hasAccess
 import com.demonwav.mcdev.platform.mixin.util.isAssignable
 import com.demonwav.mcdev.platform.mixin.util.isConstructor
@@ -108,15 +108,15 @@ class InvalidInjectorMethodSignatureInspection : MixinInspection() {
                         if (!shouldBeStatic && targetMethod.method.isConstructor) {
                             // before the superclass constructor call, everything must be static
                             val methodInsns = targetMethod.method.instructions
-                            val superCtorCall = targetMethod.method.findSuperConstructorCall()
-                            if (methodInsns != null && superCtorCall != null) {
+                            val delegateCtorCall = targetMethod.method.findDelegateConstructorCall()
+                            if (methodInsns != null && delegateCtorCall != null) {
                                 val insns = handler.resolveInstructions(
                                     annotation,
                                     targetMethod.clazz,
                                     targetMethod.method,
                                 )
                                 shouldBeStatic = insns.any {
-                                    methodInsns.indexOf(it.insn) <= methodInsns.indexOf(superCtorCall)
+                                    methodInsns.indexOf(it.insn) <= methodInsns.indexOf(delegateCtorCall)
                                 }
                             }
                         }

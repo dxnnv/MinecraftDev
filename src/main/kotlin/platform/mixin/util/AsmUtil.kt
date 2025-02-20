@@ -56,12 +56,15 @@ import com.intellij.psi.PsiCompiledFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiElementFactory
 import com.intellij.psi.PsiEllipsisType
+import com.intellij.psi.PsiEnumConstant
 import com.intellij.psi.PsiField
 import com.intellij.psi.PsiFileFactory
 import com.intellij.psi.PsiJavaFile
+import com.intellij.psi.PsiKeyword
 import com.intellij.psi.PsiLambdaExpression
 import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiMethod
+import com.intellij.psi.PsiMethodCallExpression
 import com.intellij.psi.PsiMethodReferenceExpression
 import com.intellij.psi.PsiModifier
 import com.intellij.psi.PsiModifierList
@@ -636,9 +639,9 @@ val MethodNode.isClinit
     get() = this.name == "<clinit>"
 
 /**
- * Finds the super() call in this method node, assuming it is a constructor
+ * Finds the `this()` or `super()` call in this method node, assuming it is a constructor
  */
-fun MethodNode.findSuperConstructorCall(): AbstractInsnNode? {
+fun MethodNode.findDelegateConstructorCall(): MethodInsnNode? {
     val insns = instructions ?: return null
     var superCtorCall = insns.first
     var newCount = 0
@@ -646,8 +649,8 @@ fun MethodNode.findSuperConstructorCall(): AbstractInsnNode? {
         if (superCtorCall.opcode == Opcodes.NEW) {
             newCount++
         } else if (superCtorCall.opcode == Opcodes.INVOKESPECIAL) {
-            val methodCall = superCtorCall as MethodInsnNode
-            if (methodCall.name == "<init>") {
+            superCtorCall as MethodInsnNode
+            if (superCtorCall.name == "<init>") {
                 if (newCount == 0) {
                     return superCtorCall
                 } else {
@@ -974,6 +977,67 @@ fun MethodNode.findSourceElement(
         return null
     }
     return findAssociatedLambda(psiClass, clazz, this)
+}
+
+fun MethodNode.findBodyElements(clazz: ClassNode, project: Project, scope: GlobalSearchScope): List<PsiElement> {
+    if (isClinit) {
+        val psiClass = clazz.findSourceClass(project, scope, canDecompile = true) ?: return emptyList()
+        val result = mutableListOf<PsiElement>()
+        for (element in psiClass.children) {
+            when (element) {
+                is PsiEnumConstant -> element.argumentList?.expressions?.let { result += it }
+                is PsiField -> {
+                    if (element.hasModifierProperty(PsiModifier.STATIC)) {
+                        element.initializer?.let { result += it }
+                    }
+                }
+                is PsiClassInitializer -> {
+                    if (element.hasModifierProperty(PsiModifier.STATIC)) {
+                        result += element.body
+                    }
+                }
+            }
+        }
+        return result
+    }
+
+    val sourceMethod = findSourceElement(clazz, project, scope, canDecompile = true) ?: return emptyList()
+
+    if (isConstructor && findDelegateConstructorCall()?.owner != clazz.name && sourceMethod is PsiMethod) {
+        val result = mutableListOf<PsiElement>()
+        val body = sourceMethod.body
+        if (body != null) {
+            val children = body.children
+            val superCtorIndex = children.indexOfFirst {
+                it is PsiMethodCallExpression && it.methodExpression.text == PsiKeyword.SUPER
+            }
+            result += children.take(superCtorIndex + 1)
+            sourceMethod.containingClass?.children?.forEach { element ->
+                when (element) {
+                    is PsiField -> {
+                        if (!element.hasModifierProperty(PsiModifier.STATIC)) {
+                            element.initializer?.let { result += it }
+                        }
+                    }
+                    is PsiClassInitializer -> {
+                        if (!element.hasModifierProperty(PsiModifier.STATIC)) {
+                            result += element.body
+                        }
+                    }
+                }
+            }
+            result += children.drop(superCtorIndex + 1)
+            return result
+        }
+    }
+
+    val body = when (sourceMethod) {
+        is PsiMethod -> sourceMethod.body
+        is PsiLambdaExpression -> sourceMethod.body
+        else -> null
+    }
+
+    return listOfNotNull(body)
 }
 
 /**

@@ -23,7 +23,7 @@ package com.demonwav.mcdev.platform.mixin.handlers.injectionPoint
 import com.demonwav.mcdev.platform.mixin.inspection.injector.CtorHeadNoUnsafeInspection
 import com.demonwav.mcdev.platform.mixin.reference.MixinSelector
 import com.demonwav.mcdev.platform.mixin.util.findOrConstructSourceMethod
-import com.demonwav.mcdev.platform.mixin.util.findSuperConstructorCall
+import com.demonwav.mcdev.platform.mixin.util.findDelegateConstructorCall
 import com.demonwav.mcdev.platform.mixin.util.isConstructor
 import com.demonwav.mcdev.platform.mixin.util.isFabricMixin
 import com.demonwav.mcdev.util.createLiteralExpression
@@ -132,13 +132,13 @@ class CtorHeadInjectionPoint : InjectionPoint<PsiElement>() {
                 return
             }
 
-            val superCtorCall = methodNode.findSuperConstructorCall() ?: run {
+            val delegateCtorCall = methodNode.findDelegateConstructorCall() ?: run {
                 super.accept(methodNode)
                 return
             }
 
             if (enforce == EnforceMode.POST_DELEGATE) {
-                val insn = superCtorCall.next ?: return
+                val insn = delegateCtorCall.next ?: return
                 addResult(insn, methodNode.findOrConstructSourceMethod(clazz, project))
                 return
             }
@@ -149,11 +149,11 @@ class CtorHeadInjectionPoint : InjectionPoint<PsiElement>() {
             // doesn't want to change the implementation in case of breaking mixins that rely on this
             // behavior, so it is now effectively intended, so it's what we'll use here.
             val lastFieldStore = generateSequence(insns.last) { it.previous }
-                .takeWhile { it !== superCtorCall }
+                .takeWhile { it !== delegateCtorCall }
                 .firstOrNull { insn ->
                     insn.opcode == Opcodes.PUTFIELD &&
                         (insn as FieldInsnNode).owner == clazz.name
-                } ?: superCtorCall
+                } ?: delegateCtorCall
 
             val lastFieldStoreNext = lastFieldStore.next ?: return
             addResult(lastFieldStoreNext, methodNode.findOrConstructSourceMethod(clazz, project))

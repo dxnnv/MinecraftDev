@@ -27,7 +27,7 @@ import com.demonwav.mcdev.platform.mixin.inspection.MixinInspection
 import com.demonwav.mcdev.platform.mixin.inspection.fix.AnnotationAttributeFix
 import com.demonwav.mcdev.platform.mixin.util.MethodTargetMember
 import com.demonwav.mcdev.platform.mixin.util.MixinConstants.Annotations.INJECT
-import com.demonwav.mcdev.platform.mixin.util.findSuperConstructorCall
+import com.demonwav.mcdev.platform.mixin.util.findDelegateConstructorCall
 import com.demonwav.mcdev.platform.mixin.util.isConstructor
 import com.demonwav.mcdev.platform.mixin.util.isFabricMixin
 import com.demonwav.mcdev.util.constantValue
@@ -100,12 +100,12 @@ class InjectIntoConstructorInspection : MixinInspection() {
                             return
                         }
 
-                        val superCtorCall = targetMethod.findSuperConstructorCall()
-                        if (superCtorCall != null &&
+                        val delegateCtorCall = targetMethod.findDelegateConstructorCall()
+                        if (delegateCtorCall != null &&
                             instructions.any {
                                 val insnIndex = targetMethod.instructions.indexOf(it.insn)
-                                val superCtorIndex = targetMethod.instructions.indexOf(superCtorCall)
-                                insnIndex <= superCtorIndex
+                                val delegateCtorIndex = targetMethod.instructions.indexOf(delegateCtorCall)
+                                insnIndex <= delegateCtorIndex
                             }
                         ) {
                             holder.registerProblem(

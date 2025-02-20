@@ -26,6 +26,7 @@ import com.demonwav.mcdev.platform.mixin.reference.parseMixinSelector
 import com.demonwav.mcdev.platform.mixin.reference.target.TargetReference
 import com.demonwav.mcdev.platform.mixin.util.MixinConstants.Annotations.SLICE
 import com.demonwav.mcdev.platform.mixin.util.MixinConstants.Classes.SHIFT
+import com.demonwav.mcdev.platform.mixin.util.findBodyElements
 import com.demonwav.mcdev.platform.mixin.util.findSourceElement
 import com.demonwav.mcdev.util.computeStringArray
 import com.demonwav.mcdev.util.constantStringValue
@@ -221,18 +222,27 @@ class AtResolver(
         val bytecodeResults = resolveInstructions()
 
         // Then attempt to find the corresponding source elements using the navigation visitor
-        val targetElement = targetMethod.findSourceElement(
+        val targetElements = targetMethod.findBodyElements(
             getTargetClass(target),
             at.project,
             GlobalSearchScope.allScope(at.project),
-            canDecompile = true,
-        ) ?: return emptyList()
-        val targetPsiClass = targetElement.parentOfType<PsiClass>() ?: return emptyList()
+        ).ifEmpty {
+            return listOfNotNull(
+                targetMethod.findSourceElement(
+                    getTargetClass(target),
+                    at.project,
+                    GlobalSearchScope.allScope(at.project),
+                    canDecompile = true,
+                )
+            )
+        }
+
+        val targetPsiClass = targetElements.first().parentOfType<PsiClass>() ?: return emptyList()
         val targetPsiFile = targetPsiClass.containingFile ?: return emptyList()
 
         val navigationVisitor = injectionPoint.createNavigationVisitor(at, target, targetPsiClass) ?: return emptyList()
         navigationVisitor.configureBytecodeTarget(targetClass, targetMethod)
-        targetElement.accept(navigationVisitor)
+        targetElements.forEach { it.accept(navigationVisitor) }
 
         return bytecodeResults.mapNotNull { bytecodeResult ->
             val matcher = bytecodeResult.sourceLocationInfo.createMatcher<PsiElement>(targetPsiFile)

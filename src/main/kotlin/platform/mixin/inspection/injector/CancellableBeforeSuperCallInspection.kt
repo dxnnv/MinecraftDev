@@ -26,7 +26,7 @@ import com.demonwav.mcdev.platform.mixin.inspection.MixinCancellableInspection
 import com.demonwav.mcdev.platform.mixin.inspection.MixinInspection
 import com.demonwav.mcdev.platform.mixin.util.MethodTargetMember
 import com.demonwav.mcdev.platform.mixin.util.MixinConstants
-import com.demonwav.mcdev.platform.mixin.util.findSuperConstructorCall
+import com.demonwav.mcdev.platform.mixin.util.findDelegateConstructorCall
 import com.demonwav.mcdev.platform.mixin.util.isConstructor
 import com.demonwav.mcdev.util.constantValue
 import com.intellij.codeInspection.ProblemsHolder
@@ -72,10 +72,10 @@ class CancellableBeforeSuperCallInspection : MixinInspection() {
                     continue
                 }
                 val methodInsns = target.classAndMethod.method.instructions ?: continue
-                val superCtorCall = target.classAndMethod.method.findSuperConstructorCall() ?: continue
+                val delegateCtorCall = target.classAndMethod.method.findDelegateConstructorCall() ?: continue
                 val instructions =
                     handler.resolveInstructions(annotation, target.classAndMethod.clazz, target.classAndMethod.method)
-                if (instructions.any { methodInsns.indexOf(it.insn) <= methodInsns.indexOf(superCtorCall) }) {
+                if (instructions.any { methodInsns.indexOf(it.insn) <= methodInsns.indexOf(delegateCtorCall) }) {
                     return true
                 }
             }
