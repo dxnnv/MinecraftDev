@@ -222,27 +222,30 @@ class AtResolver(
         val bytecodeResults = resolveInstructions()
 
         // Then attempt to find the corresponding source elements using the navigation visitor
+        val mainTargetElement = targetMethod.findSourceElement(
+            getTargetClass(target),
+            at.project,
+            GlobalSearchScope.allScope(at.project),
+            canDecompile = true,
+        )
         val targetElements = targetMethod.findBodyElements(
             getTargetClass(target),
             at.project,
             GlobalSearchScope.allScope(at.project),
-        ).ifEmpty {
-            return listOfNotNull(
-                targetMethod.findSourceElement(
-                    getTargetClass(target),
-                    at.project,
-                    GlobalSearchScope.allScope(at.project),
-                    canDecompile = true,
-                )
-            )
+        )
+        if (mainTargetElement == null && targetElements.isEmpty()) {
+            return emptyList()
         }
 
-        val targetPsiClass = targetElements.first().parentOfType<PsiClass>() ?: return emptyList()
+        val targetPsiClass = (mainTargetElement ?: targetElements.first()).parentOfType<PsiClass>()
+            ?: return emptyList()
         val targetPsiFile = targetPsiClass.containingFile ?: return emptyList()
 
         val navigationVisitor = injectionPoint.createNavigationVisitor(at, target, targetPsiClass) ?: return emptyList()
         navigationVisitor.configureBytecodeTarget(targetClass, targetMethod)
+        navigationVisitor.visitStart(mainTargetElement ?: targetElements.first())
         targetElements.forEach { it.accept(navigationVisitor) }
+        navigationVisitor.visitEnd(mainTargetElement ?: targetElements.last())
 
         return bytecodeResults.mapNotNull { bytecodeResult ->
             val matcher = bytecodeResult.sourceLocationInfo.createMatcher<PsiElement>(targetPsiFile)
