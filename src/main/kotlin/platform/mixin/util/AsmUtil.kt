@@ -30,6 +30,7 @@ import com.demonwav.mcdev.util.findMethods
 import com.demonwav.mcdev.util.findModule
 import com.demonwav.mcdev.util.findQualifiedClass
 import com.demonwav.mcdev.util.fullQualifiedName
+import com.demonwav.mcdev.util.hasSyntheticMethod
 import com.demonwav.mcdev.util.isErasureEquivalentTo
 import com.demonwav.mcdev.util.lockedCached
 import com.demonwav.mcdev.util.loggerForTopLevel
@@ -744,8 +745,10 @@ private fun findAssociatedLambda(psiClass: PsiClass, clazz: ClassNode, lambdaMet
                     // walk inside the reference first, visits the qualifier first (it's first in the bytecode)
                     super.visitMethodReferenceExpression(expression)
 
-                    if (matcher.accept(expression)) {
-                        stopWalking()
+                    if (expression.hasSyntheticMethod) {
+                        if (matcher.accept(expression)) {
+                            stopWalking()
+                        }
                     }
                 }
             },
