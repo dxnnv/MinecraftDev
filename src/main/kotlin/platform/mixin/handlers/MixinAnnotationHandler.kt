@@ -96,6 +96,11 @@ interface MixinAnnotationHandler {
         fun getBuiltinHandlers(): Sequence<Pair<String, MixinAnnotationHandler>> =
             EP_NAME.extensions.asSequence().map { it.key to it.instance }
 
+        fun forMixinAnnotation(annotation: PsiAnnotation, project: Project = annotation.project): MixinAnnotationHandler? {
+            val qName = annotation.qualifiedName ?: return null
+            return forMixinAnnotation(qName, project)
+        }
+
         fun forMixinAnnotation(qualifiedName: String, project: Project? = null): MixinAnnotationHandler? {
             val extension = COLLECTOR.findSingle(qualifiedName)
             if (extension != null) {

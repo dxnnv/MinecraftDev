@@ -95,9 +95,7 @@ class UnnecessaryUnsafeInspection : MixinInspection() {
     companion object {
         fun mightTargetConstructor(project: Project, at: PsiAnnotation): Boolean {
             val injectorAnnotation = AtResolver.findInjectorAnnotation(at) ?: return true
-            val handler = injectorAnnotation.qualifiedName?.let {
-                MixinAnnotationHandler.forMixinAnnotation(it, project)
-            } ?: return true
+            val handler = MixinAnnotationHandler.forMixinAnnotation(injectorAnnotation, project) ?: return true
 
             val targets = handler.resolveTarget(injectorAnnotation)
                 .filterIsInstance<MethodTargetMember>()

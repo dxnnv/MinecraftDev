@@ -247,8 +247,7 @@ object MEExpressionCompletionUtil {
         val modifierList = expressionAnnotation.findContainingModifierList() ?: return emptyList()
 
         val (handler, handlerAnnotation) = modifierList.annotations.mapFirstNotNull { annotation ->
-            val qName = annotation.qualifiedName ?: return@mapFirstNotNull null
-            val handler = MixinAnnotationHandler.forMixinAnnotation(qName, project) ?: return@mapFirstNotNull null
+            val handler = MixinAnnotationHandler.forMixinAnnotation(annotation, project) ?: return@mapFirstNotNull null
             handler to annotation
         } ?: return emptyList()
 
@@ -285,8 +284,7 @@ object MEExpressionCompletionUtil {
         val mixinClass = modifierList.findContainingClass() ?: return emptyList()
 
         val (handler, handlerAnnotation) = modifierList.annotations.mapFirstNotNull { annotation ->
-            val qName = annotation.qualifiedName ?: return@mapFirstNotNull null
-            val handler = MixinAnnotationHandler.forMixinAnnotation(qName, project) ?: return@mapFirstNotNull null
+            val handler = MixinAnnotationHandler.forMixinAnnotation(annotation, project) ?: return@mapFirstNotNull null
             handler to annotation
         } ?: return emptyList()
 

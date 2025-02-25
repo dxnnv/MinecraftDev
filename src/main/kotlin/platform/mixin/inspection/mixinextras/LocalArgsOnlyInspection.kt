@@ -53,8 +53,7 @@ class LocalArgsOnlyInspection : MixinInspection() {
             val method = parameter.findContainingMethod() ?: return
 
             val targets = method.annotations.mapFirstNotNull { annotation ->
-                val qName = annotation.qualifiedName ?: return@mapFirstNotNull null
-                val handler = MixinAnnotationHandler.forMixinAnnotation(qName, holder.project)
+                val handler = MixinAnnotationHandler.forMixinAnnotation(annotation, holder.project)
                     ?: return@mapFirstNotNull null
                 handler.resolveTarget(annotation).asSequence()
                     .filterIsInstance<MethodTargetMember>()

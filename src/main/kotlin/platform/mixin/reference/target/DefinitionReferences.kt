@@ -97,8 +97,7 @@ abstract class AbstractDefinitionReference : PolyReferenceResolver(), MixinRefer
         val project = context.project
         val modifierList = context.findContainingModifierList() ?: return emptyList()
         val (annotation, handler) = modifierList.annotations.mapFirstNotNull { annotation ->
-            val qName = annotation.qualifiedName ?: return@mapFirstNotNull null
-            val handler = MixinAnnotationHandler.forMixinAnnotation(qName, project) ?: return@mapFirstNotNull null
+            val handler = MixinAnnotationHandler.forMixinAnnotation(annotation, project) ?: return@mapFirstNotNull null
             annotation to handler
         } ?: return emptyList()
 

@@ -87,8 +87,7 @@ class ConstantInjectionPoint : InjectionPoint<PsiElement>() {
     override fun getArgsValues(at: PsiAnnotation, key: String): Array<Any> {
         fun collectTargets(constantToCompletion: (Any) -> Any?): Array<Any> {
             val injectorAnnotation = AtResolver.findInjectorAnnotation(at) ?: return ArrayUtilRt.EMPTY_OBJECT_ARRAY
-            val handler = injectorAnnotation.qualifiedName
-                ?.let { MixinAnnotationHandler.forMixinAnnotation(it, at.project) }
+            val handler = MixinAnnotationHandler.forMixinAnnotation(injectorAnnotation)
                 ?: return ArrayUtilRt.EMPTY_OBJECT_ARRAY
 
             val expandConditions = parseExpandConditions(AtResolver.getArgs(at))
