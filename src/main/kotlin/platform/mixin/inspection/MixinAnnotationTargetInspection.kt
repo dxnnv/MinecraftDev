@@ -51,8 +51,7 @@ class MixinAnnotationTargetInspection : MixinInspection() {
                     if (parentAnnotation == null) {
                         return
                     }
-                    val handler = MixinAnnotationHandler.forMixinAnnotation(parentAnnotation) ?: return
-                    val targets = handler.resolveTarget(parentAnnotation).ifEmpty { return }
+                    val targets = MixinAnnotationHandler.resolveTarget(parentAnnotation).ifEmpty { return }
                     val failure = targets.asSequence()
                         .mapNotNull {
                             (it as? MethodTargetMember)?.classAndMethod

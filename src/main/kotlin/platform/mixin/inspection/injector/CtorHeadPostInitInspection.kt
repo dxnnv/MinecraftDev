@@ -57,8 +57,8 @@ class CtorHeadPostInitInspection : MixinInspection() {
             }
 
             val injectorAnnotation = AtResolver.findInjectorAnnotation(annotation) ?: return
-            val handler = MixinAnnotationHandler.forMixinAnnotation(injectorAnnotation, holder.project) ?: return
-            val targets = handler.resolveTarget(injectorAnnotation).filterIsInstance<MethodTargetMember>()
+            val targets = MixinAnnotationHandler.resolveTarget(injectorAnnotation)
+                .filterIsInstance<MethodTargetMember>()
 
             if (targets.any {
                 it.classAndMethod.method.isConstructor &&

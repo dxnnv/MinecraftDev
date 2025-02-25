@@ -80,7 +80,8 @@ object TargetReference : PolyReferenceResolver(), MixinReference {
         if (forUnresolved && handler.isSoft) {
             return null
         }
-        return handler.resolveTarget(annotation).mapNotNull { (it as? MethodTargetMember)?.classAndMethod }
+        return MixinAnnotationHandler.resolveTarget(annotation)
+            .mapNotNull { (it as? MethodTargetMember)?.classAndMethod }
     }
 
     override fun isUnresolved(context: PsiElement): Boolean {

@@ -246,12 +246,11 @@ object MEExpressionCompletionUtil {
 
         val modifierList = expressionAnnotation.findContainingModifierList() ?: return emptyList()
 
-        val (handler, handlerAnnotation) = modifierList.annotations.mapFirstNotNull { annotation ->
-            val handler = MixinAnnotationHandler.forMixinAnnotation(annotation, project) ?: return@mapFirstNotNull null
-            handler to annotation
+        val handlerAnnotation = modifierList.annotations.firstOrNull {
+            MixinAnnotationHandler.forMixinAnnotation(it, project) != null
         } ?: return emptyList()
 
-        return handler.resolveTarget(handlerAnnotation).flatMap { member ->
+        return MixinAnnotationHandler.resolveTarget(handlerAnnotation).flatMap { member ->
             (member as? MethodTargetMember)?.classAndMethod
                 ?.let { (clazz, method) -> MEExpressionMatchUtil.getFlowMap(project, clazz, method) }
                 ?.values
