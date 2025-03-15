@@ -18,7 +18,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.mcdev.obfex.formats.srg.gen;
+package io.mcdev.obfex.formats.srg.gen.lexer;
 
 import com.intellij.lexer.*;
 import com.intellij.psi.tree.IElementType;

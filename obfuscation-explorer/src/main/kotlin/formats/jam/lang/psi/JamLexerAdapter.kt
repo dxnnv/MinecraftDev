@@ -21,6 +21,6 @@
 package io.mcdev.obfex.formats.jam.lang.psi
 
 import com.intellij.lexer.FlexAdapter
-import io.mcdev.obfex.formats.jam.gen.JamLexer
+import io.mcdev.obfex.formats.jam.gen.lexer.JamLexer
 
 class JamLexerAdapter : FlexAdapter(JamLexer())

@@ -21,6 +21,6 @@
 package io.mcdev.obfex.formats.proguard.lang.psi
 
 import com.intellij.lexer.FlexAdapter
-import io.mcdev.obfex.formats.proguard.gen.ProGuardLexer
+import io.mcdev.obfex.formats.proguard.gen.lexer.ProGuardLexer
 
 class ProGuardLexerAdapter : FlexAdapter(ProGuardLexer())

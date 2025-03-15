@@ -21,6 +21,6 @@
 package io.mcdev.obfex.formats.tsrg2.lang.psi
 
 import com.intellij.lexer.FlexAdapter
-import io.mcdev.obfex.formats.tsrg2.gen.TSrg2Lexer
+import io.mcdev.obfex.formats.tsrg2.gen.lexer.TSrg2Lexer
 
 class TSrg2LexerAdapter : FlexAdapter(TSrg2Lexer())

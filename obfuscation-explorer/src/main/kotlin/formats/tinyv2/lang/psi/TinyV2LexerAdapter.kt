@@ -21,6 +21,6 @@
 package io.mcdev.obfex.formats.tinyv2.lang.psi
 
 import com.intellij.lexer.FlexAdapter
-import io.mcdev.obfex.formats.tinyv2.gen.TinyV2Lexer
+import io.mcdev.obfex.formats.tinyv2.gen.lexer.TinyV2Lexer
 
 class TinyV2LexerAdapter : FlexAdapter(TinyV2Lexer())

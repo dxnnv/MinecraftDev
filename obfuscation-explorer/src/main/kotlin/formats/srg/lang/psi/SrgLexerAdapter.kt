@@ -21,6 +21,6 @@
 package io.mcdev.obfex.formats.srg.lang.psi
 
 import com.intellij.lexer.FlexAdapter
-import io.mcdev.obfex.formats.srg.gen.SrgLexer
+import io.mcdev.obfex.formats.srg.gen.lexer.SrgLexer
 
 class SrgLexerAdapter : FlexAdapter(SrgLexer())

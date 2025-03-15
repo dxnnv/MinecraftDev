@@ -18,7 +18,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.mcdev.obfex.formats.proguard.gen;
+package io.mcdev.obfex.formats.proguard.gen.lexer;
 
 import com.intellij.lexer.*;
 import com.intellij.psi.tree.IElementType;

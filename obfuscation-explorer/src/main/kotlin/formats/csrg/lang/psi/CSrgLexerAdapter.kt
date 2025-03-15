@@ -21,6 +21,6 @@
 package io.mcdev.obfex.formats.csrg.lang.psi
 
 import com.intellij.lexer.FlexAdapter
-import io.mcdev.obfex.formats.csrg.gen.CSrgLexer
+import io.mcdev.obfex.formats.csrg.gen.lexer.CSrgLexer
 
 class CSrgLexerAdapter : FlexAdapter(CSrgLexer())

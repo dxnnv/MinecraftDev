@@ -21,6 +21,6 @@
 package io.mcdev.obfex.formats.enigma.lang.psi
 
 import com.intellij.lexer.FlexAdapter
-import io.mcdev.obfex.formats.enigma.gen.EnigmaLexer
+import io.mcdev.obfex.formats.enigma.gen.lexer.EnigmaLexer
 
 class EnigmaLexerAdapter : FlexAdapter(EnigmaLexer())
