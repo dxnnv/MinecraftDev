@@ -105,11 +105,13 @@ dependencies {
         bundledPlugin("ByteCodeViewer")
         bundledPlugin("org.intellij.intelliLang")
         bundledPlugin("com.intellij.properties")
+        bundledPlugin("Git4Idea")
 
         // Optional dependencies
         bundledPlugin("org.jetbrains.kotlin")
         bundledPlugin("org.toml.lang")
         bundledPlugin("org.jetbrains.plugins.yaml")
+
 
         testFramework(TestFrameworkType.JUnit5)
         testFramework(TestFrameworkType.Plugin.Java)

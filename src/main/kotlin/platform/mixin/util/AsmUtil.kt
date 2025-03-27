@@ -236,11 +236,11 @@ fun findClassNodeByPsiClass(psiClass: PsiClass, module: Module? = psiClass.findM
                 }
                 val classFile = parentDir.findChild("${fqn.substringAfterLast('.')}.class")
                     ?: return@lockedCached null
-                val node = ClassNode()
+                val node = ClassNode(Opcodes.ASM7)
                 classFile.inputStream.use { ClassReader(it).accept(node, 0) }
                 node
             } else {
-                val node = ClassNode()
+                val node = ClassNode(Opcodes.ASM7)
                 ClassReader(bytes).accept(node, 0)
                 node
             }
