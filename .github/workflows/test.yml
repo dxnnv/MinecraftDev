@@ -23,7 +23,14 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: 17
+      - uses: actions-ecosystem/action-regex-match@v2
+        id: branch-match
+        with:
+          text: ${{ github.ref }}
+          regex: '^refs/heads/\d{4}\.\d$'
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: ${{ github.ref != 'refs/heads/dev' && steps.branch-match.outputs.match != '' }}
       - name: Build
         run: ./gradlew build --stacktrace
