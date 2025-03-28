@@ -23,14 +23,18 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: 17
-      - uses: actions-ecosystem/action-regex-match@v2
+      - uses: actions-ecosystem/action-regex-match@d50fd2e7a37d0e617aea3d7ada663bd56862b9cc
         id: branch-match
         with:
           text: ${{ github.ref }}
-          regex: '^refs/heads/\d{4}\.\d$'
+          regex: '^refs\/heads\/\d{4}\.\d$'
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          cache-read-only: ${{ github.ref != 'refs/heads/dev' && steps.branch-match.outputs.match != '' }}
+          cache-read-only: ${{ github.ref != 'refs/heads/dev' && steps.branch-match.outputs.match == '' }}
+      - shell: bash
+        run: |
+          mkdir -p ~/.gradle/
+          echo -e '\norg.gradle.jvmargs=-Xmx4G\n' >> ~/.gradle/gradle.properties
       - name: Build
         run: ./gradlew build --stacktrace
