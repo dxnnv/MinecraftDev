@@ -22,6 +22,8 @@ jobs:
           java-version: 17
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: true
       - name: Setup publish token
         env:
           JETBRAINS_TOKEN: ${{ secrets.JETBRAINS_TOKEN }}
