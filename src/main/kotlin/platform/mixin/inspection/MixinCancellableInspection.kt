@@ -66,7 +66,7 @@ class MixinCancellableInspection : MixinInspection() {
 
             val ciType = (ciParam.type as? PsiClassType)?.resolve() ?: return
             val searchingFor = ciType.findMethodsByName("setReturnValue", false) +
-                ciType.findMethodsByName("cancel", false)
+                ciType.findMethodsByName("cancel", true)
             searchingFor.ifEmpty { return }
 
             var mayUseCancel = false
