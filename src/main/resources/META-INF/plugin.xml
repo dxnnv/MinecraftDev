@@ -631,7 +631,7 @@
         <!-- access widener file type -->
         <fileType name="Access Widener" language="Access Widener"
                   implementationClass="com.demonwav.mcdev.platform.mcp.aw.AwFileType" fieldName="INSTANCE"
-                  patterns="*.accesswidener"/>
+                  patterns="*.accesswidener;*.aw"/>
         <lang.parserDefinition language="Access Widener"
                                implementationClass="com.demonwav.mcdev.platform.mcp.aw.AwParserDefinition"/>
         <lang.syntaxHighlighterFactory language="Access Widener"
