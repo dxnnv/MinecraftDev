@@ -1,12 +1,3 @@
-import java.io.IOException
-import java.net.URI
-import java.net.http.HttpClient
-import java.net.http.HttpRequest
-import java.net.http.HttpResponse
-import kotlin.io.path.absolute
-import org.jetbrains.intellij.platform.gradle.utils.IdeServicesPluginRepositoryService
-import org.jetbrains.intellij.pluginRepository.PluginRepositoryFactory
-
 /*
  * Minecraft Development for IntelliJ
  *
@@ -26,6 +17,15 @@ import org.jetbrains.intellij.pluginRepository.PluginRepositoryFactory
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
+import java.io.IOException
+import java.net.URI
+import java.net.http.HttpClient
+import java.net.http.HttpRequest
+import java.net.http.HttpResponse
+import kotlin.io.path.absolute
+import org.jetbrains.intellij.platform.gradle.utils.IdeServicesPluginRepositoryService
+import org.jetbrains.intellij.pluginRepository.PluginRepositoryFactory
 
 plugins {
     id("org.jetbrains.intellij.platform")
