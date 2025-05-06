@@ -89,7 +89,7 @@ class AtResolver(
             // remove slice selector
             val isInSlice = at.parentOfType<PsiAnnotation>()?.hasQualifiedName(SLICE) ?: false
             if (isInSlice) {
-                if (SliceSelector.values().any { atCode.endsWith(":${it.name}") }) {
+                if (SliceSelector.entries.any { atCode.endsWith(":${it.name}") }) {
                     atCode = atCode.substringBeforeLast(':')
                 }
             }
