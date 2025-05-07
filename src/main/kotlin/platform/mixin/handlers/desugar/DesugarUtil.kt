@@ -20,6 +20,7 @@
 
 package com.demonwav.mcdev.platform.mixin.handlers.desugar
 
+import com.demonwav.mcdev.util.cached
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Key
 import com.intellij.psi.JavaRecursiveElementWalkingVisitor
@@ -44,13 +45,15 @@ object DesugarUtil {
     }
 
     fun desugar(project: Project, clazz: PsiClass): PsiClass {
-        val desugaredFile = clazz.containingFile.copy() as PsiFile
-        val desugaredClass = PsiTreeUtil.findSameElementInCopy(clazz, desugaredFile)
-        setOriginalRecursive(desugaredClass, clazz)
-        for (desugarer in DESUGARERS) {
-            desugarer.desugar(project, desugaredClass)
+        return clazz.cached {
+            val desugaredFile = clazz.containingFile.copy() as PsiFile
+            val desugaredClass = PsiTreeUtil.findSameElementInCopy(clazz, desugaredFile)
+            setOriginalRecursive(desugaredClass, clazz)
+            for (desugarer in DESUGARERS) {
+                desugarer.desugar(project, desugaredClass)
+            }
+            desugaredClass
         }
-        return desugaredClass
     }
 
     private fun setOriginalRecursive(desugared: PsiElement, original: PsiElement) {
