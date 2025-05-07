@@ -56,7 +56,7 @@ object FieldAssignmentDesugarer : Desugarer {
                         val fieldInitializer = JavaPsiFacade.getElementFactory(project)
                             .createStatementFromText("${child.name} = null;", child) as PsiExpressionStatement
                         (fieldInitializer.expression as PsiAssignmentExpression).rExpression!!.replace(initializer)
-                        DesugarUtil.setOriginalElement(fieldInitializer, child)
+                        DesugarUtil.setOriginalElement(fieldInitializer, DesugarUtil.getOriginalElement(child))
 
                         if (seenStaticInitializer) {
                             staticStatementsToInsertPost += fieldInitializer
@@ -67,7 +67,7 @@ object FieldAssignmentDesugarer : Desugarer {
                         val fieldInitializer = JavaPsiFacade.getElementFactory(project)
                             .createStatementFromText("this.${child.name} = null;", child) as PsiExpressionStatement
                         (fieldInitializer.expression as PsiAssignmentExpression).rExpression!!.replace(initializer)
-                        DesugarUtil.setOriginalElement(fieldInitializer, child)
+                        DesugarUtil.setOriginalElement(fieldInitializer, DesugarUtil.getOriginalElement(child))
 
                         nonStaticStatementsToInsert += fieldInitializer
                     }
@@ -117,7 +117,7 @@ object FieldAssignmentDesugarer : Desugarer {
             .createClass("class _Dummy_ { static {} }")
             .initializers
             .first()
-        DesugarUtil.setOriginalElement(initializer, clazz)
+        DesugarUtil.setOriginalElement(initializer, DesugarUtil.getOriginalElement(clazz))
         return clazz.add(initializer) as PsiClassInitializer
     }
 
@@ -135,7 +135,7 @@ object FieldAssignmentDesugarer : Desugarer {
         }
 
         val constructor = JavaPsiFacade.getElementFactory(project).createConstructor(className)
-        DesugarUtil.setOriginalElement(constructor, clazz)
+        DesugarUtil.setOriginalElement(constructor, DesugarUtil.getOriginalElement(clazz))
         return listOf(clazz.add(constructor) as PsiMethod)
     }
 }

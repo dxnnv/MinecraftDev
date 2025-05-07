@@ -269,9 +269,7 @@ class AtResolver(
         navigationVisitor.visitEnd(desugaredTargetElement)
 
         // Map the desugared results back into the original source class
-        val sourceResults = navigationVisitor.result.mapNotNull { desugaredResult ->
-            desugaredResult.parents(true).firstNotNullOfOrNull(DesugarUtil::getOriginalElement)
-        }
+        val sourceResults = navigationVisitor.result.mapNotNull(DesugarUtil::getOriginalElement)
 
         // Match the bytecode results to the source results
         return bytecodeResults.mapNotNull { bytecodeResult ->

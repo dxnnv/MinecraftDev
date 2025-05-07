@@ -28,6 +28,7 @@ import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.psi.util.parents
 
 object DesugarUtil {
     private val ORIGINAL_ELEMENT_KEY = Key.create<PsiElement>("mcdev.desugar.originalElement")
@@ -37,10 +38,10 @@ object DesugarUtil {
     )
 
     fun getOriginalElement(desugared: PsiElement): PsiElement? {
-        return desugared.getCopyableUserData(ORIGINAL_ELEMENT_KEY)
+        return desugared.parents(true).firstNotNullOfOrNull { it.getCopyableUserData(ORIGINAL_ELEMENT_KEY) }
     }
 
-    fun setOriginalElement(desugared: PsiElement, original: PsiElement) {
+    fun setOriginalElement(desugared: PsiElement, original: PsiElement?) {
         desugared.putCopyableUserData(ORIGINAL_ELEMENT_KEY, original)
     }
 
