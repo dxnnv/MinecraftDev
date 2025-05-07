@@ -71,6 +71,7 @@ import com.intellij.psi.PsiModifier
 import com.intellij.psi.PsiModifierList
 import com.intellij.psi.PsiParameter
 import com.intellij.psi.PsiParameterList
+import com.intellij.psi.PsiParameterListOwner
 import com.intellij.psi.PsiType
 import com.intellij.psi.PsiTypes
 import com.intellij.psi.impl.compiled.ClsElementImpl
@@ -1036,8 +1037,7 @@ fun MethodNode.findBodyElements(clazz: ClassNode, project: Project, scope: Globa
     }
 
     val body = when (sourceMethod) {
-        is PsiMethod -> sourceMethod.body
-        is PsiLambdaExpression -> sourceMethod.body
+        is PsiParameterListOwner -> sourceMethod.body
         else -> null
     }
 
