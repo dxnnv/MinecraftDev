@@ -26,14 +26,15 @@ import com.intellij.openapi.util.Key
 import com.intellij.psi.JavaRecursiveElementWalkingVisitor
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.parents
 
 object DesugarUtil {
     private val ORIGINAL_ELEMENT_KEY = Key.create<PsiElement>("mcdev.desugar.originalElement")
 
-    private val DESUGARERS = arrayOf<Desugarer>(
+    private val DESUGARERS = arrayOf(
+        RemoveVarArgsDesugarer,
         FieldAssignmentDesugarer,
     )
 
@@ -45,13 +46,13 @@ object DesugarUtil {
         desugared.putCopyableUserData(ORIGINAL_ELEMENT_KEY, original)
     }
 
-    fun desugar(project: Project, clazz: PsiClass): PsiClass {
+    fun desugar(project: Project, clazz: PsiClass): PsiClass? {
         return clazz.cached {
-            val desugaredFile = clazz.containingFile.copy() as PsiFile
-            val desugaredClass = PsiTreeUtil.findSameElementInCopy(clazz, desugaredFile)
+            val desugaredFile = clazz.containingFile.copy() as? PsiJavaFile ?: return@cached null
+            var desugaredClass = PsiTreeUtil.findSameElementInCopy(clazz, desugaredFile)
             setOriginalRecursive(desugaredClass, clazz)
             for (desugarer in DESUGARERS) {
-                desugarer.desugar(project, desugaredClass)
+                desugaredClass = desugarer.desugar(project, desugaredFile, desugaredClass)
             }
             desugaredClass
         }

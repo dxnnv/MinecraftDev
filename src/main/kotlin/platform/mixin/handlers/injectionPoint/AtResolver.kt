@@ -236,7 +236,7 @@ class AtResolver(
         val targetPsiFile = targetPsiClass.containingFile ?: return emptyList()
 
         // Desugar the target class
-        val desugaredTargetClass = DesugarUtil.desugar(project, targetPsiClass)
+        val desugaredTargetClass = DesugarUtil.desugar(project, targetPsiClass) ?: return emptyList()
 
         // Find the element in the desugared class, first by directly searching and then by searching in the original
         // and reverse mapping it into the desugared class.
