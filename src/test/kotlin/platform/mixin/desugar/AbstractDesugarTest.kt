@@ -39,6 +39,10 @@ import org.junit.jupiter.api.Assertions.assertTrue
 abstract class AbstractDesugarTest : BaseMinecraftTest() {
     abstract val desugarer: Desugarer
 
+    protected fun doTestNoChange(@Language("JAVA") code: String) {
+        doTest(code, code)
+    }
+
     protected fun doTest(@Language("JAVA") before: String, @Language("JAVA") after: String) {
         WriteCommandAction.runWriteCommandAction(project) {
             val codeStyleManager = CodeStyleManager.getInstance(project)

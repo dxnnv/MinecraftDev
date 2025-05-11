@@ -50,9 +50,11 @@ object FieldAssignmentDesugarer : Desugarer() {
 
                         if (child.hasModifierProperty(PsiModifier.STATIC)) {
                             // check if the field is a ConstantValue with no initializer in the bytecode
-                            val constantValue = initializer.constantValue
-                            if (constantValue != null && constantValue !is PsiType) {
-                                continue
+                            if (child.hasModifierProperty(PsiModifier.FINAL)) {
+                                val constantValue = initializer.constantValue
+                                if (constantValue != null && constantValue !is PsiType) {
+                                    continue
+                                }
                             }
 
                             val fieldInitializer = JavaPsiFacade.getElementFactory(project)
@@ -81,7 +83,7 @@ object FieldAssignmentDesugarer : Desugarer() {
                         if (child.hasModifierProperty(PsiModifier.STATIC)) {
                             seenStaticInitializer = true
                         } else {
-                            nonStaticStatementsToInsert += child.body.statements
+                            nonStaticStatementsToInsert += child.body.statements.map { it.copy() as PsiStatement }
                             child.delete()
                         }
                     }
@@ -117,10 +119,8 @@ object FieldAssignmentDesugarer : Desugarer() {
             }
         }
 
-        val initializer = JavaPsiFacade.getElementFactory(project)
-            .createClass("class _Dummy_ { static {} }")
-            .initializers
-            .first()
+        val initializer = JavaPsiFacade.getElementFactory(project).createClassInitializer()
+        initializer.modifierList!!.setModifierProperty(PsiModifier.STATIC, true)
         DesugarUtil.setOriginalElement(initializer, DesugarUtil.getOriginalElement(clazz))
         return clazz.add(initializer) as PsiClassInitializer
     }
