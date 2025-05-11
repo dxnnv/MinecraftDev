@@ -23,14 +23,14 @@ package com.demonwav.mcdev.platform.mixin.handlers.desugar
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiJavaFile
-import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.psi.util.childrenOfType
 
 abstract class Desugarer {
     abstract fun desugar(project: Project, file: PsiJavaFile, clazz: PsiClass): PsiClass
 
     companion object {
         @JvmStatic
-        protected val PsiJavaFile.allClasses: Collection<PsiClass>
-            get() = PsiTreeUtil.findChildrenOfType(this, PsiClass::class.java)
+        protected val PsiJavaFile.allClasses: List<PsiClass>
+            get() = this.childrenOfType<PsiClass>()
     }
 }

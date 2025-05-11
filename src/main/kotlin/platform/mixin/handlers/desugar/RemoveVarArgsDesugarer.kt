@@ -20,16 +20,19 @@
 
 package com.demonwav.mcdev.platform.mixin.handlers.desugar
 
+import com.demonwav.mcdev.util.childrenOfType
 import com.intellij.codeInsight.daemon.impl.analysis.JavaGenericsUtil
 import com.intellij.openapi.project.Project
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiCall
 import com.intellij.psi.PsiCapturedWildcardType
 import com.intellij.psi.PsiClass
+import com.intellij.psi.PsiEllipsisType
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiNewExpression
 import com.intellij.psi.PsiTypeCastExpression
+import com.intellij.psi.PsiTypeElement
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiTypesUtil
 import com.intellij.psi.util.TypeConversionUtil
@@ -94,6 +97,13 @@ object RemoveVarArgsDesugarer : Desugarer() {
             }
 
             argumentList.add(replacementExpr)
+        }
+
+        val ellipsisTypes = file.childrenOfType<PsiTypeElement>().filter { it.type is PsiEllipsisType }
+        for (ellipsisType in ellipsisTypes) {
+            val newType = (ellipsisType.type as PsiEllipsisType).toArrayType()
+            val newTypeElement = ellipsisType.replace(elementFactory.createTypeElement(newType))
+            DesugarUtil.setOriginalElement(newTypeElement, DesugarUtil.getOriginalElement(ellipsisType))
         }
 
         return clazz
