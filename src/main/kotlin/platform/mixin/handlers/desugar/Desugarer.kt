@@ -26,7 +26,7 @@ import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.util.childrenOfType
 
 abstract class Desugarer {
-    abstract fun desugar(project: Project, file: PsiJavaFile, clazz: PsiClass): PsiClass
+    abstract fun desugar(project: Project, file: PsiJavaFile)
 
     companion object {
         @JvmStatic

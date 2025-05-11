@@ -29,6 +29,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.parents
+import org.jetbrains.annotations.VisibleForTesting
 
 object DesugarUtil {
     private val ORIGINAL_ELEMENT_KEY = Key.create<PsiElement>("mcdev.desugar.originalElement")
@@ -46,19 +47,34 @@ object DesugarUtil {
         desugared.putCopyableUserData(ORIGINAL_ELEMENT_KEY, original)
     }
 
-    fun desugar(project: Project, clazz: PsiClass): PsiClass? {
-        return clazz.cached {
-            val desugaredFile = clazz.containingFile.copy() as? PsiJavaFile ?: return@cached null
-            var desugaredClass = PsiTreeUtil.findSameElementInCopy(clazz, desugaredFile)
-            setOriginalRecursive(desugaredClass, clazz)
-            for (desugarer in DESUGARERS) {
-                desugaredClass = desugarer.desugar(project, desugaredFile, desugaredClass)
+    fun getOriginalToDesugaredMap(desugared: PsiElement): Map<PsiElement, List<PsiElement>> {
+        val desugaredFile = desugared.containingFile ?: return emptyMap()
+        return desugaredFile.cached {
+            val result = mutableMapOf<PsiElement, MutableList<PsiElement>>()
+            PsiTreeUtil.processElements(desugaredFile) { desugaredElement ->
+                desugaredElement.getCopyableUserData(ORIGINAL_ELEMENT_KEY)?.let { original ->
+                    result.getOrPut(original) { mutableListOf() } += desugaredElement
+                }
+                true
             }
-            desugaredClass
+            result
         }
     }
 
-    private fun setOriginalRecursive(desugared: PsiElement, original: PsiElement) {
+    fun desugar(project: Project, clazz: PsiClass): PsiClass? {
+        val file = clazz.containingFile as? PsiJavaFile ?: return null
+        return file.cached {
+            val desugaredFile = file.copy() as PsiJavaFile
+            setOriginalRecursive(desugaredFile, file)
+            for (desugarer in DESUGARERS) {
+                desugarer.desugar(project, desugaredFile)
+            }
+            getOriginalToDesugaredMap(desugaredFile)[clazz]?.filterIsInstance<PsiClass>()?.firstOrNull()
+        }
+    }
+
+    @VisibleForTesting
+    fun setOriginalRecursive(desugared: PsiElement, original: PsiElement) {
         val desugaredElements = mutableListOf<PsiElement>()
         desugared.accept(object : JavaRecursiveElementWalkingVisitor() {
             override fun visitElement(element: PsiElement) {
@@ -78,18 +94,5 @@ object DesugarUtil {
         for ((originalElement, desugaredElement) in originalElements.zip(desugaredElements)) {
             setOriginalElement(desugaredElement, originalElement)
         }
-    }
-
-    fun getOriginalToDesugaredMap(desugared: PsiElement): Map<PsiElement, List<PsiElement>> {
-        val result = mutableMapOf<PsiElement, MutableList<PsiElement>>()
-        desugared.accept(object : JavaRecursiveElementWalkingVisitor() {
-            override fun visitElement(element: PsiElement) {
-                super.visitElement(element)
-                getOriginalElement(element)?.let { original ->
-                    result.getOrPut(original) { mutableListOf() } += desugared
-                }
-            }
-        })
-        return result
     }
 }

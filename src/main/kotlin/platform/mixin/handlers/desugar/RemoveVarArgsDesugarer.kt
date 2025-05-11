@@ -26,7 +26,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiCall
 import com.intellij.psi.PsiCapturedWildcardType
-import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiEllipsisType
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiMethod
@@ -39,7 +38,7 @@ import com.intellij.psi.util.TypeConversionUtil
 import com.siyeh.ig.psiutils.MethodCallUtils
 
 object RemoveVarArgsDesugarer : Desugarer() {
-    override fun desugar(project: Project, file: PsiJavaFile, clazz: PsiClass): PsiClass {
+    override fun desugar(project: Project, file: PsiJavaFile) {
         val varArgsStarts = mutableListOf<Pair<PsiCall, Int>>()
         PsiTreeUtil.processElements(file) { element ->
             if (element is PsiCall && MethodCallUtils.isVarArgCall(element)) {
@@ -75,8 +74,10 @@ object RemoveVarArgsDesugarer : Desugarer() {
                 newExpr to newExpr
             } else {
                 val erasure = TypeConversionUtil.erasure(type)
-                val castExpr = elementFactory.createExpressionFromText("(${type.canonicalText}) new ${erasure.canonicalText}[] {}", call)
-                    as PsiTypeCastExpression
+                val castExpr = elementFactory.createExpressionFromText(
+                    "(${type.createArrayType().canonicalText}) new ${erasure.canonicalText}[] {}",
+                    call
+                ) as PsiTypeCastExpression
                 castExpr to castExpr.operand as PsiNewExpression
             }
 
@@ -105,7 +106,5 @@ object RemoveVarArgsDesugarer : Desugarer() {
             val newTypeElement = ellipsisType.replace(elementFactory.createTypeElement(newType))
             DesugarUtil.setOriginalElement(newTypeElement, DesugarUtil.getOriginalElement(ellipsisType))
         }
-
-        return clazz
     }
 }

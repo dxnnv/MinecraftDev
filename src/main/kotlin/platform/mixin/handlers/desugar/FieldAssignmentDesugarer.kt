@@ -36,7 +36,7 @@ import com.intellij.psi.PsiType
 import com.intellij.util.JavaPsiConstructorUtil
 
 object FieldAssignmentDesugarer : Desugarer() {
-    override fun desugar(project: Project, file: PsiJavaFile, clazz: PsiClass): PsiClass {
+    override fun desugar(project: Project, file: PsiJavaFile) {
         val staticStatementsToInsertPre = mutableListOf<PsiStatement>()
         val staticStatementsToInsertPost = mutableListOf<PsiStatement>()
         val nonStaticStatementsToInsert = mutableListOf<PsiStatement>()
@@ -108,8 +108,6 @@ object FieldAssignmentDesugarer : Desugarer() {
                 }
             }
         }
-
-        return clazz
     }
 
     private fun findStaticBlock(project: Project, clazz: PsiClass): PsiClassInitializer {
