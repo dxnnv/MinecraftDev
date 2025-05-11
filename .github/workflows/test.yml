@@ -38,3 +38,8 @@ jobs:
           echo -e '\norg.gradle.jvmargs=-Xmx4G\n' >> ~/.gradle/gradle.properties
       - name: Build
         run: ./gradlew build --stacktrace
+      - name: Upload test reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: build/reports
