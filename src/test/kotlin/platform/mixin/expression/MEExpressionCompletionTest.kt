@@ -24,7 +24,11 @@ import com.demonwav.mcdev.MinecraftProjectSettings
 import com.demonwav.mcdev.framework.EdtInterceptor
 import com.demonwav.mcdev.platform.mixin.BaseMixinTest
 import com.demonwav.mcdev.util.BeforeOrAfter
+import com.demonwav.mcdev.util.invokeDeclaredMethod
 import com.intellij.codeInsight.lookup.impl.LookupImpl
+import com.intellij.openapi.util.text.StringUtil
+import com.intellij.psi.PsiFile
+import com.intellij.testFramework.fixtures.impl.CodeInsightTestFixtureImpl
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -95,6 +99,26 @@ class MEExpressionCompletionTest : BaseMixinTest() {
         } else if (expectedAfter == null) {
             fail<Unit>("Expected no completions matching \"$lookupString\"")
             return
+        }
+
+        // TODO: this is for debugging, remove this once we figure out why tests are failing
+        try {
+            val actual = StringUtil.convertLineSeparators(
+                (fixture.invokeDeclaredMethod(
+                    "getHostFile",
+                    emptyArray(),
+                    emptyArray(),
+                    CodeInsightTestFixtureImpl::class.java
+                ) as PsiFile).text
+            )
+            assertEquals(
+                expectedAfter.replace("<caret>", ""),
+                actual
+            ) {
+                "File comparison failed, actual text: ${actual.ifEmpty { "<empty file oh no!>" }}"
+            }
+        } catch (e: ReflectiveOperationException) {
+            System.err.println("Unable to call getHostFile")
         }
 
         fixture.checkResult(expectedAfter)
