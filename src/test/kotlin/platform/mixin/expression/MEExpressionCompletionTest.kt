@@ -86,19 +86,24 @@ class MEExpressionCompletionTest : BaseMixinTest() {
 
         MinecraftProjectSettings.getInstance(fixture.project).definitionPosRelativeToExpression = BeforeOrAfter.BEFORE
 
-        val possibleItems = fixture.completeBasic()
-        if (possibleItems != null) {
-            val itemToComplete = possibleItems.firstOrNull { it.lookupString == lookupString }
-            if (expectedAfter != null) {
-                assertNotNull(itemToComplete, "Expected a completion matching \"$lookupString\"")
-                (fixture.lookup as LookupImpl).finishLookup('\n', itemToComplete)
-            } else {
-                assertNull(itemToComplete, "Expected no completions matching \"$lookupString\"")
+        try {
+            MEExpressionCompletionUtil.debugCompletionUnitTest = true
+            val possibleItems = fixture.completeBasic()
+            if (possibleItems != null) {
+                val itemToComplete = possibleItems.firstOrNull { it.lookupString == lookupString }
+                if (expectedAfter != null) {
+                    assertNotNull(itemToComplete, "Expected a completion matching \"$lookupString\"")
+                    (fixture.lookup as LookupImpl).finishLookup('\n', itemToComplete)
+                } else {
+                    assertNull(itemToComplete, "Expected no completions matching \"$lookupString\"")
+                    return
+                }
+            } else if (expectedAfter == null) {
+                fail<Unit>("Expected no completions matching \"$lookupString\"")
                 return
             }
-        } else if (expectedAfter == null) {
-            fail<Unit>("Expected no completions matching \"$lookupString\"")
-            return
+        } finally {
+            MEExpressionCompletionUtil.debugCompletionUnitTest = false
         }
 
         // TODO: this is for debugging, remove this once we figure out why tests are failing

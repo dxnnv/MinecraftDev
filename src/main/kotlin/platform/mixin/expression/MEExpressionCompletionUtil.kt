@@ -142,6 +142,7 @@ private typealias TemplateExpressionContext = com.intellij.codeInsight.template.
 
 object MEExpressionCompletionUtil {
     private const val DEBUG_COMPLETION = false
+    var debugCompletionUnitTest = false
 
     private val NORMAL_ELEMENT = PlatformPatterns.psiElement()
         .inside(MEStatement::class.java)
@@ -1175,12 +1176,19 @@ object MEExpressionCompletionUtil {
         definitionValue: String,
         crossinline andThen: (InsertionContext, PsiAnnotation) -> Unit
     ) = withInsertHandler { context, _ ->
+        if (debugCompletionUnitTest) System.err.println("Here 1")
         context.laterRunnable = Runnable {
+            if (debugCompletionUnitTest) System.err.println("Here 2")
             context.commitDocument()
+            if (debugCompletionUnitTest) System.err.println("Here 3")
             CommandProcessor.getInstance().runUndoTransparentAction {
+                if (debugCompletionUnitTest) System.err.println("Here 4")
                 runWriteAction {
+                    if (debugCompletionUnitTest) System.err.println("Here 5")
                     val annotation = addDefinition(context, id, definitionValue)
+                    if (debugCompletionUnitTest) System.err.println("Here 6")
                     if (annotation != null) {
+                        if (debugCompletionUnitTest) System.err.println("Here 7")
                         andThen(context, annotation)
                     }
                 }
@@ -1189,6 +1197,7 @@ object MEExpressionCompletionUtil {
     }
 
     private fun addDefinition(context: InsertionContext, id: String, definitionValue: String): PsiAnnotation? {
+        if (debugCompletionUnitTest) System.err.println("Here 8, ${context.startOffset}, ${context.file.text}")
         val contextElement = context.file.findElementAt(context.startOffset) ?: return null
         return addDefinition(context.project, contextElement, id, definitionValue)
     }
@@ -1199,13 +1208,18 @@ object MEExpressionCompletionUtil {
         id: String,
         definitionValue: String
     ): PsiAnnotation? {
+        if (debugCompletionUnitTest) System.err.println("Here 9, $id")
         val injectionHost = contextElement.findMultiInjectionHost() ?: return null
+        if (debugCompletionUnitTest) System.err.println("Here 10")
         val expressionAnnotation = injectionHost.parentOfType<PsiAnnotation>() ?: return null
+        if (debugCompletionUnitTest) System.err.println("Here 11")
         if (!expressionAnnotation.hasQualifiedName(MixinConstants.MixinExtras.EXPRESSION)) {
             return null
         }
+        if (debugCompletionUnitTest) System.err.println("Here 12")
         val modifierList = expressionAnnotation.findContainingModifierList() ?: return null
 
+        if (debugCompletionUnitTest) System.err.println("Here 13")
         // look for an existing definition with this id, skip if it exists
         for (annotation in modifierList.annotations) {
             if (annotation.hasQualifiedName(MixinConstants.MixinExtras.DEFINITION) &&
@@ -1214,6 +1228,7 @@ object MEExpressionCompletionUtil {
                 return null
             }
         }
+        if (debugCompletionUnitTest) System.err.println("Here 14")
 
         // create and add the new @Definition annotation
         var newAnnotation = JavaPsiFacade.getElementFactory(project).createAnnotationFromText(
@@ -1228,15 +1243,19 @@ object MEExpressionCompletionUtil {
                 anchor = expressionAnnotation
             }
         }
+        if (debugCompletionUnitTest) System.err.println("Here 15, ${newAnnotation.text}, ${anchor?.text}")
         newAnnotation = modifierList.addAfter(newAnnotation, anchor) as PsiAnnotation
 
         // add imports and reformat
+        if (debugCompletionUnitTest) System.err.println("Here 16")
         newAnnotation =
             JavaCodeStyleManager.getInstance(project).shortenClassReferences(newAnnotation) as PsiAnnotation
         JavaCodeStyleManager.getInstance(project).optimizeImports(modifierList.containingFile)
+        if (debugCompletionUnitTest) System.err.println("Here 17")
         val annotationIndex = modifierList.annotations.indexOf(newAnnotation)
         val formattedModifierList =
             CodeStyleManager.getInstance(project).reformat(modifierList) as PsiModifierList
+        if (debugCompletionUnitTest) System.err.println("Here 18")
         return formattedModifierList.annotations.getOrNull(annotationIndex)
     }
 
