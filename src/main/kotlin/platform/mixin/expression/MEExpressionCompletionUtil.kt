@@ -89,7 +89,6 @@ import com.intellij.openapi.command.CommandProcessor
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.FoldRegion
-import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.patterns.PlatformPatterns
 import com.intellij.patterns.StandardPatterns
@@ -1209,7 +1208,7 @@ object MEExpressionCompletionUtil {
         id: String,
         definitionValue: String
     ): PsiAnnotation? {
-        if (debugCompletionUnitTest) System.err.println("Here 9, $id, ${DumbService.getInstance(project).isDumb}")
+        if (debugCompletionUnitTest) System.err.println("Here 9, $id")
         val injectionHost = contextElement.findMultiInjectionHost() ?: return null
         if (debugCompletionUnitTest) System.err.println("Here 10")
         val expressionAnnotation = injectionHost.parentOfType<PsiAnnotation>() ?: return null

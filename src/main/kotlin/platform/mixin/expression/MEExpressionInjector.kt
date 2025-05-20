@@ -80,28 +80,21 @@ class MEExpressionInjector : MultiHostInjector {
     }
 
     override fun getLanguagesToInject(registrar: MultiHostRegistrar, context: PsiElement) {
-        if (MEExpressionCompletionUtil.debugCompletionUnitTest) System.err.println("Injector 1")
         val project = context.project
         val (anchor, _) = JavaConcatenationToInjectorAdapter(project).computeAnchorAndOperands(context)
 
-        if (MEExpressionCompletionUtil.debugCompletionUnitTest) System.err.println("Injector 2 ${anchor.text}")
         if (!shouldInjectIn(anchor)) {
             return
         }
-        if (MEExpressionCompletionUtil.debugCompletionUnitTest) System.err.println("Injector 3")
-        if (MEExpressionCompletionUtil.debugCompletionUnitTest) Thread.dumpStack()
 
         val modifierList = anchor.findContainingModifierList() ?: return
-        if (MEExpressionCompletionUtil.debugCompletionUnitTest) System.err.println("Injector 4")
 
         val modCount = PsiModificationTracker.getInstance(project).modificationCount
         val primaryElement = modifierList.getUserData(ME_EXPRESSION_INJECTION)
-        if (MEExpressionCompletionUtil.debugCompletionUnitTest) System.err.println("Injector 5, $modCount")
         if (primaryElement != null && primaryElement.modCount == modCount) {
             METHOD_ADD_TO_RESULTS.invoke(registrar, primaryElement.injectionResult)
             return
         }
-        if (MEExpressionCompletionUtil.debugCompletionUnitTest) System.err.println("Injector 6")
 
         // A Frankenstein injection is an injection where we don't know the entire contents, and therefore errors should
         // not be reported.
