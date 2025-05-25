@@ -61,7 +61,7 @@ class UnresolvedLocalCaptureInspection : MixinInspection() {
             for (target in targets) {
                 val matchingLocals = localInfo.matchLocals(
                     module, target.method.clazz, target.method.method, target.result.insn,
-                    CollectVisitor.Mode.MATCH_ALL
+                    CollectVisitor.Mode.RESOLUTION
                 ) ?: continue
                 if (matchingLocals.size != 1) {
                     holder.registerProblem(

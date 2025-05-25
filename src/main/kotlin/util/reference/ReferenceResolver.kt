@@ -105,7 +105,7 @@ abstract class PolyReferenceResolver : PsiReferenceProvider() {
     }
 }
 
-private fun PsiElement.findContextElement(): PsiElement {
+fun PsiElement.findContextElement(): PsiElement {
     var current: PsiElement
     var parent = this
 

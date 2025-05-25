@@ -219,11 +219,11 @@ class ExpressionInjectionPoint : InjectionPoint<PsiElement>() {
         private val poolFactory: IdentifierPoolFactory,
         private val contextType: ExpressionContext.Type,
     ) : CollectVisitor<PsiElement>(mode) {
-        override fun accept(methodNode: MethodNode) {
-            val insns = methodNode.instructions ?: return
+        override fun accept(methodNode: MethodNode) = sequence {
+            val insns = methodNode.instructions ?: return@sequence
 
             val pool = poolFactory(methodNode)
-            val flows = MEExpressionMatchUtil.getFlowMap(project, targetClass, methodNode) ?: return
+            val flows = MEExpressionMatchUtil.getFlowMap(project, targetClass, methodNode) ?: return@sequence
 
             val result = IdentityHashMap<AbstractInsnNode, Pair<PsiElement, Map<String, Any?>>>()
 
@@ -247,7 +247,7 @@ class ExpressionInjectionPoint : InjectionPoint<PsiElement>() {
             }
 
             if (result.isEmpty()) {
-                return
+                return@sequence
             }
 
             for (insn in insns) {
