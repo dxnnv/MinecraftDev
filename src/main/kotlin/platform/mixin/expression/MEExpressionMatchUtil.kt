@@ -221,7 +221,7 @@ object MEExpressionMatchUtil {
 
                     val filteredLocals = localInfo.matchLocals(
                         module, targetClass, targetMethod, actualInsn,
-                        CollectVisitor.Mode.MATCH_ALL
+                        CollectVisitor.Mode.RESOLUTION
                     ) ?: return@addMember false
                     filteredLocals.any { it.index == virtualInsn.`var` }
                 }

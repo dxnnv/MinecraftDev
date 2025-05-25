@@ -48,7 +48,7 @@ class ModifyVariableHandler : InjectorAnnotationHandler() {
         val at = annotation.findAttributeValue("at") as? PsiAnnotation
         val atCode = at?.findAttributeValue("value")?.constantStringValue
         val isLoadStore = atCode != null && InjectionPoint.byAtCode(atCode) is AbstractLoadInjectionPoint
-        val mode = if (isLoadStore) CollectVisitor.Mode.COMPLETION else CollectVisitor.Mode.MATCH_ALL
+        val mode = if (isLoadStore) CollectVisitor.Mode.COMPLETION else CollectVisitor.Mode.RESOLUTION
         val targets = resolveInstructions(annotation, targetClass, targetMethod, mode)
 
         val targetParamsGroup = ParameterGroup(
