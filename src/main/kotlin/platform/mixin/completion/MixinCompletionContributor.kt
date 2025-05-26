@@ -110,7 +110,6 @@ class MixinCompletionContributor : CompletionContributor() {
                 .map { it.createLookupElement(psiClass.project) }
                 .filter { prefixMatcher.prefixMatches(it) }
                 .filter(filter, position)
-                .map { PrioritizedLookupElement.withExplicitProximity(it, 1) }
                 .toList()
 
             r.addAllElements(elements)
