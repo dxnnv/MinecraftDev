@@ -23,6 +23,7 @@ package com.demonwav.mcdev.platform.mixin.desugar
 import com.demonwav.mcdev.platform.mixin.handlers.desugar.FieldAssignmentDesugarer
 import org.junit.jupiter.api.Test
 
+@Suppress("InstantiationOfUtilityClass")
 class FieldAssignmentDesugarTest : AbstractDesugarTest() {
     override val desugarer = FieldAssignmentDesugarer
 

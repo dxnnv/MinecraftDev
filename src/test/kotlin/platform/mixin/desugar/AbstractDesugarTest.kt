@@ -21,6 +21,7 @@
 package com.demonwav.mcdev.platform.mixin.desugar
 
 import com.demonwav.mcdev.framework.BaseMinecraftTest
+import com.demonwav.mcdev.platform.mixin.handlers.desugar.DesugarContext
 import com.demonwav.mcdev.platform.mixin.handlers.desugar.DesugarUtil
 import com.demonwav.mcdev.platform.mixin.handlers.desugar.Desugarer
 import com.intellij.openapi.command.WriteCommandAction
@@ -35,15 +36,16 @@ import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertInstanceOf
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.objectweb.asm.Opcodes
 
 abstract class AbstractDesugarTest : BaseMinecraftTest() {
     abstract val desugarer: Desugarer
 
-    protected fun doTestNoChange(@Language("JAVA") code: String) {
-        doTest(code, code)
+    protected fun doTestNoChange(@Language("JAVA") code: String, classVersion: Int = Opcodes.V21) {
+        doTest(code, code, classVersion)
     }
 
-    protected fun doTest(@Language("JAVA") before: String, @Language("JAVA") after: String) {
+    protected fun doTest(@Language("JAVA") before: String, @Language("JAVA") after: String, classVersion: Int = Opcodes.V21) {
         WriteCommandAction.runWriteCommandAction(project) {
             val codeStyleManager = CodeStyleManager.getInstance(project)
             val javaCodeStyleManager = JavaCodeStyleManager.getInstance(project)
@@ -71,7 +73,7 @@ abstract class AbstractDesugarTest : BaseMinecraftTest() {
 
             val desugaredFile = testFile.copy() as PsiJavaFile
             DesugarUtil.setOriginalRecursive(desugaredFile, testFile)
-            desugarer.desugar(project, desugaredFile)
+            desugarer.desugar(project, desugaredFile, DesugarContext(classVersion))
             assertEquals(
                 expectedText,
                 codeStyleManager.reformat(javaCodeStyleManager.shortenClassReferences(desugaredFile.copy())).text

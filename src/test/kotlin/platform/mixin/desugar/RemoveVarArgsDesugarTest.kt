@@ -108,6 +108,7 @@ class RemoveVarArgsDesugarTest : AbstractDesugarTest() {
 
     @Test
     fun testGenericClass() {
+        @Suppress("unchecked")
         doTest(
             """
                 class Test<T> {

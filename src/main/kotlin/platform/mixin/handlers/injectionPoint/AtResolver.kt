@@ -20,6 +20,7 @@
 
 package com.demonwav.mcdev.platform.mixin.handlers.injectionPoint
 
+import com.demonwav.mcdev.platform.mixin.handlers.desugar.DesugarContext
 import com.demonwav.mcdev.platform.mixin.handlers.desugar.DesugarUtil
 import com.demonwav.mcdev.platform.mixin.reference.MixinSelector
 import com.demonwav.mcdev.platform.mixin.reference.isMiscDynamicSelector
@@ -226,7 +227,8 @@ class AtResolver(
         val targetPsiFile = targetPsiClass.containingFile ?: return emptyList()
 
         // Desugar the target class
-        val desugaredTargetClass = DesugarUtil.desugar(project, targetPsiClass) ?: return emptyList()
+        val desugaredTargetClass = DesugarUtil.desugar(project, targetPsiClass, DesugarContext(targetClass.version))
+            ?: return emptyList()
 
         // Find the element in the desugared class, first by directly searching and then by searching in the original
         // and reverse mapping it into the desugared class.

@@ -38,7 +38,7 @@ import com.intellij.psi.util.TypeConversionUtil
 import com.siyeh.ig.psiutils.MethodCallUtils
 
 object RemoveVarArgsDesugarer : Desugarer() {
-    override fun desugar(project: Project, file: PsiJavaFile) {
+    override fun desugar(project: Project, file: PsiJavaFile, context: DesugarContext) {
         val varArgsStarts = mutableListOf<Pair<PsiCall, Int>>()
         PsiTreeUtil.processElements(file) { element ->
             if (element is PsiCall && MethodCallUtils.isVarArgCall(element)) {
