@@ -86,6 +86,7 @@ object FieldAssignmentDesugarer : Desugarer() {
                             seenStaticInitializer = true
                         } else {
                             val blockStatement = factory.createStatementFromText("{}", null) as PsiBlockStatement
+                            DesugarUtil.setOriginalElement(blockStatement, DesugarUtil.getOriginalElement(child))
                             blockStatement.codeBlock.replace(child.body)
                             nonStaticStatementsToInsert += blockStatement
                             child.delete()
