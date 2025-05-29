@@ -89,15 +89,16 @@ class MixinAnnotationTargetInspection : MixinInspection() {
             }
 
             private fun addFilterMessage(message: String, stats: Map<String, Int>): String {
-                if (stats.isEmpty()) {
+                val statsItr = stats.entries.asSequence().filter { it.value != 0 }.iterator()
+                if (!statsItr.hasNext()) {
                     return message
                 }
+
                 return buildString {
                     append(message)
                     append(" (")
-                    val it = stats.entries.asSequence().filter { it.value != 0 }.iterator()
-                    append(it.next().let { (k, v) -> "$v filtered out by $k" })
-                    for ((k, v) in it) {
+                    append(statsItr.next().let { (k, v) -> "$v filtered out by $k" })
+                    for ((k, v) in statsItr) {
                         append(", $v more by $k")
                     }
                     append(')')
