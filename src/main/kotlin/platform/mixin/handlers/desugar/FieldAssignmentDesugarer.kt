@@ -24,6 +24,7 @@ import com.demonwav.mcdev.util.constantValue
 import com.intellij.openapi.project.Project
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiAssignmentExpression
+import com.intellij.psi.PsiBlockStatement
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiClassInitializer
 import com.intellij.psi.PsiExpressionStatement
@@ -41,6 +42,7 @@ object FieldAssignmentDesugarer : Desugarer() {
         val staticStatementsToInsertPost = mutableListOf<PsiStatement>()
         val nonStaticStatementsToInsert = mutableListOf<PsiStatement>()
         var seenStaticInitializer = false
+        val factory = JavaPsiFacade.getElementFactory(project)
 
         for (aClass in DesugarUtil.allClasses(file)) {
             for (child in aClass.children) {
@@ -57,8 +59,8 @@ object FieldAssignmentDesugarer : Desugarer() {
                                 }
                             }
 
-                            val fieldInitializer = JavaPsiFacade.getElementFactory(project)
-                                .createStatementFromText("${child.name} = null;", child) as PsiExpressionStatement
+                            val fieldInitializer = factory.createStatementFromText("${child.name} = null;", child)
+                                    as PsiExpressionStatement
                             (fieldInitializer.expression as PsiAssignmentExpression).rExpression!!.replace(initializer)
                             DesugarUtil.setOriginalElement(fieldInitializer, DesugarUtil.getOriginalElement(child))
 
@@ -68,8 +70,8 @@ object FieldAssignmentDesugarer : Desugarer() {
                                 staticStatementsToInsertPre += fieldInitializer
                             }
                         } else {
-                            val fieldInitializer = JavaPsiFacade.getElementFactory(project)
-                                .createStatementFromText("this.${child.name} = null;", child) as PsiExpressionStatement
+                            val fieldInitializer = factory.createStatementFromText("this.${child.name} = null;", child)
+                                    as PsiExpressionStatement
                             (fieldInitializer.expression as PsiAssignmentExpression).rExpression!!.replace(initializer)
                             DesugarUtil.setOriginalElement(fieldInitializer, DesugarUtil.getOriginalElement(child))
 
@@ -83,7 +85,9 @@ object FieldAssignmentDesugarer : Desugarer() {
                         if (child.hasModifierProperty(PsiModifier.STATIC)) {
                             seenStaticInitializer = true
                         } else {
-                            nonStaticStatementsToInsert += child.body.statements.map { it.copy() as PsiStatement }
+                            val blockStatement = factory.createStatementFromText("{}", null) as PsiBlockStatement
+                            blockStatement.codeBlock.replace(child.body)
+                            nonStaticStatementsToInsert += blockStatement
                             child.delete()
                         }
                     }

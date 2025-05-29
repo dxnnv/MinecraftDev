@@ -313,7 +313,9 @@ class FieldAssignmentDesugarTest : AbstractDesugarTest() {
                     
                     public Test() {
                         this.field1 = "test1";
-                        System.out.println("Hello World!");
+                        {
+                            System.out.println("Hello World!");
+                        }
                         this.field2 = "test2";
                     }
                 }
