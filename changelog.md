@@ -1,5 +1,24 @@
 # Minecraft Development for IntelliJ
 
+## [1.8.5]
+
+### Added
+
+- Support for the 2025.2 EAP
+
+### Changed
+
+- Demote a couple of mixin inspections from error to warning
+- Allow handler methods to be static even when not required, except for `@Inject` on stock mixin
+- Allow `CallbackInfoReturnable.cancel()` in MixinCancellableInspection
+- Check bases for `CIR.cancel()`
+- Allow `.aw` as alternative access widener file extension
+
+### Fixed
+
+- [#2148](https://github.com/minecraft-dev/MinecraftDev/issues/2148) Allow assignment to `@Final` fields in class initializer blocks
+- [#2468](https://github.com/minecraft-dev/MinecraftDev/issues/2468) Fix entrypoint checks on non-ending parts of entrypoint references, and handle escapes in entrypoint reference strings
+
 ## [1.8.4]
 
 ### Added
