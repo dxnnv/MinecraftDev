@@ -4,6 +4,7 @@
 
 ### Added
 
+- Support injection point specifiers everywhere
 - Support for the 2025.2 EAP
 
 ### Changed
@@ -13,11 +14,16 @@
 - Allow `CallbackInfoReturnable.cancel()` in MixinCancellableInspection
 - Check bases for `CIR.cancel()`
 - Allow `.aw` as alternative access widener file extension
+- Remove shadow completions explicit proximity
 
 ### Fixed
 
 - [#2148](https://github.com/minecraft-dev/MinecraftDev/issues/2148) Allow assignment to `@Final` fields in class initializer blocks
-- [#2468](https://github.com/minecraft-dev/MinecraftDev/issues/2468) Fix entrypoint checks on non-ending parts of entrypoint references, and handle escapes in entrypoint reference strings
+- [#2468](https://github.com/minecraft-dev/MinecraftDev/issues/2468) entrypoint checks on non-ending parts of entrypoint references, and handle escapes in entrypoint reference strings
+- [#2470](https://github.com/minecraft-dev/MinecraftDev/issues/2470) Various Mixin fixes
+- `@Shadow` suggestions being incorrectly prioritized
+- `NoSuchElementException` in MixinAnnotationTargetInspection
+- `IllegalStateException` when typing a colon in Java code
 
 ## [1.8.4]
 
