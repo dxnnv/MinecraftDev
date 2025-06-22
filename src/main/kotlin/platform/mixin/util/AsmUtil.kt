@@ -1100,6 +1100,26 @@ fun MethodInsnNode.fakeResolve(): ClassAndMethodNode {
     return ClassAndMethodNode(clazz, method)
 }
 
+// AbstractInsnNode
+
+val AbstractInsnNode.nextRealInsn: AbstractInsnNode?
+    get() {
+        var insn = next
+        while (insn != null && insn.opcode < 0) {
+            insn = insn.next
+        }
+        return insn
+    }
+
+val AbstractInsnNode.previousRealInsn: AbstractInsnNode?
+    get() {
+        var insn = previous
+        while (insn != null && insn.opcode < 0) {
+            insn = insn.previous
+        }
+        return insn
+    }
+
 // Textifier
 
 fun ClassNode.textify(): String {
