@@ -780,6 +780,7 @@
                                  implementationClass="com.demonwav.mcdev.platform.mixin.expression.psi.MENameElementManipulator"/>
         <lang.findUsagesProvider language="MEExpression"
                                  implementationClass="com.demonwav.mcdev.platform.mixin.expression.reference.MEExpressionFindUsagesProvider"/>
+        <referencesSearch implementation="com.demonwav.mcdev.platform.mixin.expression.reference.MEDefinitionReferencesSearcher"/>
         <lang.refactoringSupport language="MEExpression"
                                  implementationClass="com.demonwav.mcdev.platform.mixin.expression.MEExpressionRefactoringSupport"/>
         <completion.contributor language="MEExpression"
