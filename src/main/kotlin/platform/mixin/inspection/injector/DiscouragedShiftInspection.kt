@@ -46,18 +46,18 @@ class DiscouragedShiftInspection : MixinInspection() {
             val atValue = annotation.findDeclaredAttributeValue("value") ?: return
             val atCode = atValue.constantStringValue ?: return
             val shift = AtResolver.getShift(annotation)
-            if (isShiftDiscouraged(shift, injector, atCode)) {
+            if (isShiftDiscouraged(shift, annotation, injector, atCode)) {
                 val shiftElement = annotation.findDeclaredAttributeValue("shift") ?: return
                 holder.registerProblem(shiftElement, "Shifting like this is discouraged because it's brittle")
             }
         }
     }
 
-    private fun isShiftDiscouraged(shift: Int, injector: InjectorAnnotationHandler, atCode: String): Boolean {
+    private fun isShiftDiscouraged(shift: Int, at: PsiAnnotation, injector: InjectorAnnotationHandler, atCode: String): Boolean {
         if (injector.isShiftAlwaysDiscouraged) {
             return shift != 0
         }
 
-        return InjectionPoint.byAtCode(atCode)?.isShiftDiscouraged(shift) == true
+        return InjectionPoint.byAtCode(atCode)?.isShiftDiscouraged(shift, at) == true
     }
 }

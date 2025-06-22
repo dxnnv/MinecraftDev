@@ -28,4 +28,10 @@ interface MEMatchableElement : PsiElement {
     fun matchesJava(java: PsiElement, context: MESourceMatchContext): Boolean
 
     fun getInputExprs(): List<MEExpression>
+
+    /**
+     * Whether an injector shifting after this expression should be discouraged. Generally implemented as whether the
+     * expression could have (non-exceptional) side effects.
+     */
+    val isShiftDiscouraged: Boolean
 }
