@@ -32,7 +32,7 @@ import com.intellij.codeInsight.completion.CompletionType
 import com.intellij.codeInsight.completion.JavaCompletionContributor
 import com.intellij.codeInsight.completion.JavaCompletionSorting
 import com.intellij.codeInsight.completion.LegacyCompletionContributor
-import com.intellij.codeInsight.completion.PrioritizedLookupElement
+import com.intellij.openapi.util.text.StringUtil
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiExpression
 import com.intellij.psi.PsiJavaReference
@@ -107,8 +107,11 @@ class MixinCompletionContributor : CompletionContributor() {
 
             // Process methods and fields from target class
             val elements = findShadowTargets(psiClass, start, superMixin != null)
+                .filter {
+                    val name = it.name
+                    StringUtil.isJavaIdentifier(name) && prefixMatcher.prefixMatches(name)
+                }
                 .map { it.createLookupElement(psiClass.project) }
-                .filter { prefixMatcher.prefixMatches(it) }
                 .filter(filter, position)
                 .toList()
 
