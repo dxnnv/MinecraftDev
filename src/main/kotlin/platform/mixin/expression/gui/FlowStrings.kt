@@ -21,6 +21,8 @@
 package com.demonwav.mcdev.platform.mixin.expression.gui
 
 import com.demonwav.mcdev.platform.mixin.util.LocalVariables
+import com.demonwav.mcdev.platform.mixin.util.shortDescString
+import com.demonwav.mcdev.platform.mixin.util.shortName
 import com.demonwav.mcdev.platform.mixin.util.textify
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.project.Project
@@ -39,6 +41,7 @@ import org.objectweb.asm.tree.ClassNode
 import org.objectweb.asm.tree.FieldInsnNode
 import org.objectweb.asm.tree.MethodInsnNode
 import org.objectweb.asm.tree.MethodNode
+import org.objectweb.asm.tree.TypeInsnNode
 import org.objectweb.asm.tree.VarInsnNode
 
 fun FlowValue.shortString(project: Project, clazz: ClassNode, method: MethodNode): String {
@@ -63,6 +66,9 @@ fun FlowValue.shortString(project: Project, clazz: ClassNode, method: MethodNode
     getDecoration<FlowValue>(FlowDecorations.COMPLEX_COMPARISON_JUMP)?.let { jump ->
         return complexCmpString(insn.opcode, jump.insn.opcode)
     }
+    if (insn.opcode == Opcodes.INSTANCEOF) {
+        return instanceofString(insn as TypeInsnNode)
+    }
     return when (val insn = insn) {
         is FieldInsnNode -> fieldString(insn)
         is VarInsnNode -> varString(this, insn.`var`, project, clazz, method)
@@ -77,13 +83,7 @@ fun FlowValue.longString(): String =
         insn.textify()
     }
 
-val Type.shortName get() = className.substringAfterLast('.').replace('$', '.')
-
 private fun shortOwner(owner: String) = Type.getObjectType(owner).shortName
-
-private fun shortParams(desc: String) = Type.getArgumentTypes(desc).joinToString(prefix = "(", postfix = ")") {
-    it.shortName
-}
 
 private fun constantString(cst: Any): String {
     if (cst is Int) {
@@ -96,6 +96,7 @@ private fun constantString(cst: Any): String {
     }
     return when (cst) {
         Type.VOID_TYPE -> "null"
+        is Type -> "${cst.shortName}.class"
         is String -> "'${cst.escape()}'"
         is Float -> "${cst}F"
         is Long -> "${cst}L"
@@ -110,7 +111,7 @@ private fun instantiationString(info: InstantiationInfo): String {
         return start
     }
     val call = insn.insn as? MethodInsnNode ?: return start
-    return start + shortParams(call.desc)
+    return start + shortDescString(call.desc)
 }
 
 private fun lmfString(info: LMFInfo): String {
@@ -128,7 +129,9 @@ private fun varString(flow: FlowValue, index: Int, project: Project, clazz: Clas
         location = location.next
     }
     val localName = ReadAction.compute<_, Nothing> {
-        LocalVariables.getLocalVariableAt(project, clazz, method, location, index)
+        runCatching {
+            LocalVariables.getLocalVariableAt(project, clazz, method, location, index)
+        }.getOrNull()
     }?.name ?: "<local $index>"
     val isStore = flow.insn.opcode in Opcodes.ISTORE..Opcodes.ASTORE
     return localName + if (isStore) " =" else ""
@@ -147,17 +150,26 @@ private fun methodString(insn: MethodInsnNode, methodCallType: MethodCallType): 
         MethodCallType.SUPER -> "super"
         MethodCallType.STATIC -> shortOwner(insn.owner)
     }
-    return "$owner.${insn.name}${shortParams(insn.desc)}"
+    return "$owner.${insn.name}${shortDescString(insn.desc)}"
 }
 
 private fun castString(type: Type): String = "(${type.shortName})"
 
 private fun complexCmpString(opcode: Int, jumpOpcode: Int): String {
     val isG = opcode == Opcodes.FCMPG || opcode == Opcodes.DCMPG
+    val isLong = opcode == Opcodes.LCMP
     return when (jumpOpcode) {
         Opcodes.IFEQ, Opcodes.IFNE -> "== or !="
-        Opcodes.IFLT, Opcodes.IFGE -> if (isG) "<" else ">="
-        Opcodes.IFGT, Opcodes.IFLE -> if (isG) "<=" else ">"
+        Opcodes.IFLT, Opcodes.IFGE -> when {
+            isLong -> "< or >="
+            isG -> "<"
+            else -> ">="
+        }
+        Opcodes.IFGT, Opcodes.IFLE -> when {
+            isLong -> "<= or >"
+            isG -> "<="
+            else -> ">"
+        }
         else -> "Unknown jump"
     }
 }
@@ -174,6 +186,11 @@ private fun newArrayString(flow: FlowValue): String? {
         return prefix
     }
     return "$prefix{ }"
+}
+
+private fun instanceofString(insn: TypeInsnNode): String {
+    val type = Type.getObjectType(insn.desc)
+    return "instanceof ${type.shortName}"
 }
 
 private fun opcodeString(opcode: Int) = when (opcode) {

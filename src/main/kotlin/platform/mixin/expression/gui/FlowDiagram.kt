@@ -20,32 +20,28 @@
 
 package com.demonwav.mcdev.platform.mixin.expression.gui
 
+import com.demonwav.mcdev.platform.mixin.expression.MEExpressionMatchUtil
+import com.demonwav.mcdev.util.constantStringValue
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.EDT
-import com.intellij.openapi.editor.colors.EditorColorsManager
-import com.intellij.openapi.editor.colors.EditorFontType
+import com.intellij.openapi.application.ModalityState
+import com.intellij.openapi.application.ReadAction
+import com.intellij.openapi.module.Module
 import com.intellij.openapi.progress.checkCanceled
 import com.intellij.openapi.project.Project
-import com.intellij.util.ui.JBUI
-import com.intellij.util.ui.UIUtil
+import com.intellij.openapi.util.text.StringUtil
+import com.intellij.pom.Navigatable
+import com.intellij.psi.PsiLiteralExpression
+import com.intellij.psi.PsiModifierList
+import com.intellij.psi.SmartPointerManager
+import com.llamalad7.mixinextras.expression.impl.point.ExpressionContext
 import com.mxgraph.layout.hierarchical.mxHierarchicalLayout
 import com.mxgraph.model.mxCell
-import com.mxgraph.swing.mxGraphComponent
-import com.mxgraph.util.mxConstants
-import com.mxgraph.util.mxEvent
 import com.mxgraph.util.mxRectangle
 import com.mxgraph.view.mxGraph
-import java.awt.BorderLayout
-import java.awt.Color
 import java.awt.Dimension
-import java.awt.Rectangle
 import java.util.SortedMap
-import javax.swing.JButton
-import javax.swing.JLabel
-import javax.swing.JPanel
-import javax.swing.JTextField
-import javax.swing.JToolBar
-import javax.swing.event.DocumentEvent
-import javax.swing.event.DocumentListener
+import java.util.concurrent.Callable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.objectweb.asm.tree.ClassNode
@@ -55,153 +51,169 @@ private const val OUTER_PADDING = 30.0
 private const val INTER_GROUP_SPACING = 75
 private const val INTRA_GROUP_SPACING = 75
 private const val LINE_NUMBER_STYLE = "LINE_NUMBER"
-private const val HIGHLIGHT_STYLE = "HIGHLIGHT"
 
 class FlowDiagram(
+    val ui: FlowDiagramUi,
+    private val flowGraph: FlowGraph,
+    private val clazz: ClassNode,
     val method: MethodNode,
-    val panel: JPanel,
-    val scrollToLine: (Int) -> Unit,
 ) {
     companion object {
         suspend fun create(project: Project, clazz: ClassNode, method: MethodNode): FlowDiagram? {
             val flowGraph = FlowGraph.parse(project, clazz, method) ?: return null
-            return buildPanel(flowGraph, method)
+            return buildDiagram(flowGraph, clazz, method)
         }
+    }
+
+    var matchExpression: ((jump: Boolean) -> Unit) = {}
+        private set
+    var jumpToExpression: () -> Unit = {}
+        private set
+
+    init {
+        ui.viewToolbar.onSearchFieldChanged {
+            ui.highlightCells(it)
+        }
+
+        ui.matchToolbar.onTextClicked {
+            jumpToExpression()
+        }
+
+        ui.matchToolbar.onRefresh {
+            matchExpression(false)
+        }
+
+        ui.matchToolbar.onClear {
+            clearExpression()
+        }
+
+        ui.onNodeSelected { node, soft ->
+            flowGraph.highlightMatches(node, soft)
+            ui.refresh()
+        }
+    }
+
+    fun populateMatchStatuses(
+        module: Module,
+        currentStringLit: PsiLiteralExpression,
+        currentModifierList: PsiModifierList
+    ) {
+        val stringRef = SmartPointerManager.getInstance(module.project).createSmartPsiElementPointer(currentStringLit)
+        val modifierListRef =
+            SmartPointerManager.getInstance(module.project).createSmartPsiElementPointer(currentModifierList)
+        this.matchExpression = { jump ->
+            val oldHighlightRoot = flowGraph.highlightRoot
+            ui.setMatchToolbarVisible(false)
+            flowGraph.resetMatches()
+            ReadAction.nonBlocking(Callable<String?> run@{
+                val stringLit = stringRef.element ?: return@run null
+                val modifierList = modifierListRef.element ?: return@run null
+                val expression = stringLit.constantStringValue?.let(MEExpressionMatchUtil::createExpression)
+                    ?: return@run null
+                val pool = MEExpressionMatchUtil.createIdentifierPoolFactory(module, clazz, modifierList)(method)
+                for ((virtualInsn, root) in flowGraph.flowMap) {
+                    val node = flowGraph.allNodes.getValue(root)
+                    MEExpressionMatchUtil.findMatchingInstructions(
+                        clazz, method, pool, flowGraph.flowMap, expression, listOf(virtualInsn),
+                        ExpressionContext.Type.MODIFY_EXPRESSION_VALUE, // most permissive
+                        false,
+                        node::reportMatchStatus,
+                        node::reportPartialMatch
+                    ) {}
+                }
+                flowGraph.markHasMatchData()
+                flowGraph.highlightMatches(oldHighlightRoot, false)
+                StringUtil.escapeStringCharacters(expression.src.toString())
+            })
+                .finishOnUiThread(ModalityState.nonModal()) { exprText ->
+                    exprText ?: return@finishOnUiThread
+                    if (jump) {
+                        showBestNode()
+                    }
+                    ui.refresh()
+                    ui.setExprText(exprText)
+                }
+                .submit(ApplicationManager.getApplication()::executeOnPooledThread)
+        }
+        this.jumpToExpression = {
+            ReadAction.run<Nothing> {
+                val target = stringRef.element
+                if (target is Navigatable && target.isValid && target.canNavigate()) {
+                    target.navigate(true)
+                }
+            }
+        }
+        matchExpression(true)
+    }
+
+    private fun showBestNode() {
+        val bestNode = flowGraph.orderedNodes.maxBy { it.matchScore }
+        flowGraph.highlightMatches(bestNode, false)
+        ui.scrollToNode(bestNode)
+    }
+
+    private fun clearExpression() {
+        ui.setMatchToolbarVisible(false)
+        flowGraph.resetMatches()
+        ui.refresh()
+        matchExpression = {}
+        jumpToExpression = {}
     }
 }
 
-private suspend fun buildPanel(flowGraph: FlowGraph, method: MethodNode): FlowDiagram {
-    val graph = MxFlowGraph()
+private suspend fun buildDiagram(flowGraph: FlowGraph, clazz: ClassNode, method: MethodNode): FlowDiagram {
+    val graph = MxFlowGraph(flowGraph)
     setupStyles(graph)
     val groupedCells = addGraphContent(graph, flowGraph)
     val lineNumberNodes = sortedMapOf<Int, mxCell>()
     val calculateBounds = layOutGraph(graph, groupedCells, lineNumberNodes)
 
-    val panel: JPanel
-    val scrollToLine = withContext(Dispatchers.EDT) {
-        panel = JPanel(BorderLayout())
-        displayGraphComponent(graph, panel, calculateBounds, lineNumberNodes)
+    val ui = withContext(Dispatchers.EDT) {
+        FlowDiagramUi(graph, calculateBounds, lineNumberNodes)
     }
-    return FlowDiagram(method, panel, scrollToLine)
+    return FlowDiagram(ui, flowGraph, clazz, method)
 }
 
-private fun displayGraphComponent(
-    graph: mxGraph,
-    panel: JPanel,
-    calculateBounds: () -> Dimension,
-    lineNumberNodes: SortedMap<Int, mxCell>
-): (Int) -> Unit {
-    val comp = mxGraphComponent(graph)
-    fun fixBounds() {
-        comp.graphControl.preferredSize = calculateBounds()
-    }
-
-    graph.view.addListener(mxEvent.SCALE_AND_TRANSLATE) { _, _ ->
-        fixBounds()
-    }
-    fixBounds()
-    configureGraphComponent(comp)
-
-    val toolbar = createToolbar(comp, ::fixBounds)
-    panel.add(toolbar, BorderLayout.NORTH)
-    panel.add(comp, BorderLayout.CENTER)
-
-    return { lineNumber ->
-        lineNumberNodes.tailMap(lineNumber).firstEntry()?.let { (_, node) ->
-            scrollCellToVisible(comp, node)
-        }
-    }
-}
-
-private fun scrollCellToVisible(comp: mxGraphComponent, node: mxCell) {
-    // Scrolls the cell to the top of the screen if possible
-    val graph = comp.graph
-    val state = graph.view.getState(node) ?: return
-    val cellBounds = state.rectangle
-    val viewRect = comp.viewport.viewRect
-    val targetRect = Rectangle(
-        cellBounds.x, cellBounds.y,
-        1, viewRect.height
-    )
-    comp.graphControl.scrollRectToVisible(targetRect)
-}
-
-private fun createToolbar(comp: mxGraphComponent, fixBounds: () -> Unit): JToolBar {
-    val toolbar = JToolBar()
-    toolbar.isFloatable = false
-    val zoomInButton = JButton("+")
-    zoomInButton.toolTipText = "Zoom In"
-    zoomInButton.addActionListener {
-        comp.zoomIn()
-    }
-    val zoomOutButton = JButton("−")
-    zoomOutButton.toolTipText = "Zoom Out"
-    zoomOutButton.addActionListener {
-        comp.zoomOut()
-    }
-    toolbar.add(zoomInButton)
-    toolbar.add(zoomOutButton)
-    toolbar.addSeparator(Dimension(20, 0))
-    toolbar.add(JLabel("Search: "))
-    toolbar.add(createSearchField(comp, fixBounds))
-    return toolbar
-}
-
-private fun createSearchField(comp: mxGraphComponent, fixBounds: () -> Unit): JTextField {
-    val graph = comp.graph
-    val searchField = JTextField()
-    searchField.document.addDocumentListener(object : DocumentListener {
-        override fun insertUpdate(e: DocumentEvent) = updateHighlight()
-
-        override fun removeUpdate(e: DocumentEvent) = updateHighlight()
-
-        override fun changedUpdate(e: DocumentEvent) = updateHighlight()
-
-        private fun updateHighlight() {
-            val searchText = searchField.text.lowercase()
-            graph.update {
-                val vertices = graph.getChildVertices(graph.defaultParent)
-                var scrolled = false
-
-                for (cell in vertices) {
-                    cell as mxCell
-                    if (cell.style == LINE_NUMBER_STYLE) {
-                        continue
-                    }
-                    val texts = listOf(
-                        graph.convertValueToString(cell),
-                        graph.getToolTipForCell(cell),
-                    )
-
-                    if (searchText.isNotEmpty() && texts.any { searchText in it.lowercase() }) {
-                        graph.setCellStyle(HIGHLIGHT_STYLE, arrayOf(cell))
-                        if (!scrolled) {
-                            comp.scrollCellToVisible(cell, true)
-                            comp.zoomTo(1.2, true)
-                            graph.selectionCell = cell
-                            scrolled = true
-                        }
-                    } else {
-                        graph.model.setStyle(cell, null)
-                    }
-                }
-            }
-            comp.refresh()
-            fixBounds()
-        }
-    })
-    return searchField
-}
-
-private class MxFlowGraph : mxGraph() {
-    override fun getToolTipForCell(cell: Any?): String {
+private class MxFlowGraph(private val flowGraph: FlowGraph) : mxGraph() {
+    override fun getToolTipForCell(cell: Any?): String? {
         val flow = (cell as? mxCell)?.value as? FlowNode ?: return super.getToolTipForCell(cell)
-        return flow.longText
+        val lines = mutableListOf<String>()
+        if (flowGraph.shouldShowTooltips()) {
+            flow.currentMatchResult?.let { match ->
+                lines += match.toString(
+                    prefix = "`<span style='font-family: ${DiagramStyles.CURRENT_EDITOR_FONT};'>",
+                    suffix = "</span>`",
+                    transform = StringUtil::escapeXmlEntities
+                )
+            }
+        }
+        lines += StringUtil.escapeXmlEntities(flow.longText).replace("\n", "<br>")
+        return lines.joinToString(
+            prefix = "<html>",
+            separator = "<br><br>",
+            postfix = "</html>"
+        )
     }
 
     override fun convertValueToString(cell: Any?): String {
         val flow = (cell as? mxCell)?.value as? FlowNode ?: return super.convertValueToString(cell)
         return flow.shortText
+    }
+
+    override fun getCellStyle(cell: Any?): MutableMap<String, Any> {
+        val result = super.getCellStyle(cell).toMutableMap()
+        val flow = (cell as? mxCell)?.value as? FlowNode ?: return result
+        when (flow.currentMatchResult?.status) {
+            FlowMatchStatus.IGNORED -> result += DiagramStyles.IGNORED
+            FlowMatchStatus.FAIL -> result += DiagramStyles.FAILED
+            FlowMatchStatus.PARTIAL -> result += DiagramStyles.PARTIAL_MATCH
+            FlowMatchStatus.SUCCESS -> result += DiagramStyles.SUCCESS
+            null -> {}
+        }
+        if (flow.searchHighlight) {
+            result += DiagramStyles.SEARCH_HIGHLIGHT
+        }
+        return result
     }
 }
 
@@ -283,65 +295,8 @@ private suspend fun layOutGraph(
 }
 
 private fun setupStyles(graph: mxGraph) {
-    val colorScheme = EditorColorsManager.getInstance().globalScheme
-    graph.stylesheet.defaultVertexStyle.let {
-        it[mxConstants.STYLE_FONTFAMILY] = colorScheme.getFont(EditorFontType.PLAIN).family
-        it[mxConstants.STYLE_ROUNDED] = true
-        it[mxConstants.STYLE_FILLCOLOR] = JBUI.CurrentTheme.Button.buttonColorStart().hexString
-        it[mxConstants.STYLE_FONTCOLOR] = UIUtil.getLabelForeground().hexString
-        it[mxConstants.STYLE_STROKECOLOR] = JBUI.CurrentTheme.Button.buttonOutlineColorStart(false).hexString
-        it[mxConstants.STYLE_ALIGN] = mxConstants.ALIGN_CENTER
-        it[mxConstants.STYLE_VERTICAL_ALIGN] = mxConstants.ALIGN_TOP
-        it[mxConstants.STYLE_SHAPE] = mxConstants.SHAPE_LABEL
-        it[mxConstants.STYLE_SPACING] = 5
-        it[mxConstants.STYLE_SPACING_TOP] = 3
-    }
-
-    graph.stylesheet.defaultEdgeStyle.let {
-        it[mxConstants.STYLE_STROKECOLOR] = UIUtil.getFocusedBorderColor().hexString
-    }
-
-    graph.stylesheet.putCellStyle(
-        LINE_NUMBER_STYLE,
-        mapOf(
-            mxConstants.STYLE_FONTSIZE to "16",
-            mxConstants.STYLE_STROKECOLOR to "none",
-            mxConstants.STYLE_FILLCOLOR to "none",
-        )
-    )
-    graph.stylesheet.putCellStyle(
-        HIGHLIGHT_STYLE,
-        mapOf(
-            mxConstants.STYLE_STROKECOLOR to UIUtil.getFocusedBorderColor().hexString,
-            mxConstants.STYLE_STROKEWIDTH to "2",
-        )
-    )
-}
-
-private fun configureGraphComponent(comp: mxGraphComponent) {
-    val graph = comp.graph
-    graph.isCellsSelectable = false
-    graph.isCellsEditable = false
-    comp.isConnectable = false
-    comp.isPanning = true
-    comp.setToolTips(true)
-    comp.viewport.setOpaque(true)
-    comp.viewport.setBackground(EditorColorsManager.getInstance().globalScheme.defaultBackground)
-
-    comp.zoomAndCenter()
-    comp.graphControl.isDoubleBuffered = false
-    comp.graphControl.setOpaque(false)
-    comp.verticalScrollBar.setUnitIncrement(16)
-    comp.horizontalScrollBar.setUnitIncrement(16)
-}
-
-private val Color.hexString get() = "#%06X".format(rgb)
-
-private inline fun <T> mxGraph.update(routine: () -> T): T {
-    model.beginUpdate()
-    try {
-        return routine()
-    } finally {
-        model.endUpdate()
-    }
+    val stylesheet = graph.stylesheet
+    stylesheet.defaultVertexStyle.putAll(DiagramStyles.DEFAULT_NODE)
+    stylesheet.defaultEdgeStyle.putAll(DiagramStyles.DEFAULT_EDGE)
+    stylesheet.putCellStyle(LINE_NUMBER_STYLE, DiagramStyles.LINE_NUMBER)
 }

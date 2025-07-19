@@ -20,6 +20,7 @@
 
 package com.demonwav.mcdev.platform.mixin.expression.gui
 
+import com.demonwav.mcdev.platform.mixin.util.shortName
 import com.intellij.openapi.application.EDT
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.project.Project
@@ -46,13 +47,13 @@ private val FLOW_DIAGRAM_KEY = Key.create<FlowDiagram>("${MEFlowWindowService::c
 
 @Service(Service.Level.PROJECT)
 class MEFlowWindowService(private val project: Project, private val scope: CoroutineScope) {
-    fun showDiagram(clazz: ClassNode, method: MethodNode, lineNumber: Int?) {
+    fun showDiagram(clazz: ClassNode, method: MethodNode, action: (FlowDiagram) -> Unit) {
         scope.launch(Dispatchers.EDT) {
-            showDiagramImpl(clazz, method, lineNumber)
+            showDiagramImpl(clazz, method, action)
         }
     }
 
-    private suspend fun showDiagramImpl(clazz: ClassNode, method: MethodNode, lineNumber: Int?) {
+    private suspend fun showDiagramImpl(clazz: ClassNode, method: MethodNode, action: (FlowDiagram) -> Unit) {
         val toolWindowManager = ToolWindowManager.getInstance(project)
         var toolWindow = toolWindowManager.getToolWindow(TOOL_WINDOW_ID)
 
@@ -68,10 +69,9 @@ class MEFlowWindowService(private val project: Project, private val scope: Corou
             project, "Failed to create flow diagram", "Error"
         )
         toolWindow.contentManager.setSelectedContent(content)
-        if (lineNumber != null) {
-            content.getUserData(FLOW_DIAGRAM_KEY)?.scrollToLine?.invoke(lineNumber)
+        toolWindow.activate {
+            content.getUserData(FLOW_DIAGRAM_KEY)?.let(action)
         }
-        toolWindow.activate(null)
     }
 
     private suspend fun chooseContent(toolWindow: ToolWindow, clazz: ClassNode, method: MethodNode): Content? {
@@ -90,7 +90,7 @@ class MEFlowWindowService(private val project: Project, private val scope: Corou
                 FlowDiagram.create(project, clazz, method)
             } ?: return@compute null
             val container = JPanel(BorderLayout())
-            container.add(diagram.panel, BorderLayout.CENTER)
+            container.add(diagram.ui, BorderLayout.CENTER)
             val content = ContentFactory.getInstance().createContent(container, getTabName(clazz, method), false)
             content.putUserData(FLOW_DIAGRAM_KEY, diagram)
             content
