@@ -73,18 +73,7 @@ tasks.withType<KotlinCompile>().configureEach {
 
 repositories {
     maven("https://repo.denwav.dev/repository/maven-public/")
-    maven("https://maven.fabricmc.net/") {
-        content {
-            includeModule("net.fabricmc", "mapping-io")
-            includeModule("net.fabricmc", "fabric-loader")
-        }
-    }
     mavenCentral()
-    maven("https://repo.spongepowered.org/maven/") {
-        content {
-            includeGroup("org.spongepowered")
-        }
-    }
     maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/") {
         content {
             includeGroup("org.spigotmc")

@@ -21,11 +21,6 @@
 package com.demonwav.mcdev.facet
 
 import com.demonwav.mcdev.platform.PlatformType
-import com.demonwav.mcdev.platform.architectury.framework.ARCHITECTURY_LIBRARY_KIND
-import com.demonwav.mcdev.platform.architectury.framework.ArchitecturyGradleData
-import com.demonwav.mcdev.platform.fabric.framework.FABRIC_LIBRARY_KIND
-import com.demonwav.mcdev.platform.mcp.gradle.tooling.archloom.ArchitecturyModel
-import com.demonwav.mcdev.platform.sponge.framework.SPONGE_LIBRARY_KIND
 import com.demonwav.mcdev.util.ifEmpty
 import com.demonwav.mcdev.util.runWriteTaskLater
 import com.intellij.facet.FacetManager
@@ -61,16 +56,9 @@ import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import org.jetbrains.plugins.gradle.util.GradleUtil
 
 class MinecraftFacetDetector : ProjectActivity {
-    companion object {
-        private val libraryVersionsKey = Key<MutableMap<LibraryKind, String>>("mcdev.libraryVersions")
 
-        fun getLibraryVersions(module: Module): Map<LibraryKind, String> {
-            return module.getUserData(libraryVersionsKey) ?: emptyMap()
-        }
-    }
 
     override suspend fun execute(project: Project) {
         val detectorService = project.service<FacetDetectorScopeProvider>()
@@ -146,7 +134,7 @@ class MinecraftFacetDetector : ProjectActivity {
                 // Only add the new facet if there isn't a Minecraft facet already - double check here since this
                 // task may run much later
                 if (module.isDisposed) {
-                    // Module may be disposed before we run
+                    // Module may be disposed of before we run
                     return@runWriteTaskLater
                 }
 
@@ -172,16 +160,11 @@ class MinecraftFacetDetector : ProjectActivity {
             types.clear()
             types.addAll(platforms)
 
-            if (facet.configuration.state.forgePatcher) {
-                // make sure Forge and MCP are present
-                types.add(PlatformType.FORGE)
-                types.add(PlatformType.MCP)
-            }
-
             facet.refresh()
         }
 
         private fun autoDetectTypes(module: Module): Set<PlatformType> {
+            val libraryVersionsKey = Key<MutableMap<LibraryKind, String>>("mcdev.libraryVersions")
             val libraryVersions = module.getUserData(libraryVersionsKey)
                 ?: mutableMapOf<LibraryKind, String>().also { module.putUserData(libraryVersionsKey, it) }
             libraryVersions.clear()
@@ -204,39 +187,6 @@ class MinecraftFacetDetector : ProjectActivity {
                     }
                     return@forEach true
                 }
-
-            context.rootModel
-                .orderEntries()
-                .using(context.modulesProvider)
-                .recursively()
-                .withoutLibraries()
-                .withoutSdk()
-                .forEachModule forEach@{ m ->
-                    if (m.name.startsWith("SpongeAPI", ignoreCase = true)) {
-                        // We don't want want to add parent modules in module groups
-                        val moduleManager = ModuleManager.getInstance(m.project)
-                        val groupPath = moduleManager.getModuleGrouper(null).getGroupPath(m)
-                        if (groupPath.isEmpty()) {
-                            platformKinds.add(SPONGE_LIBRARY_KIND)
-                            return@forEach true
-                        }
-
-                        val name = groupPath.lastOrNull() ?: return@forEach true
-                        if (m.name == name) {
-                            return@forEach true
-                        }
-
-                        platformKinds.add(SPONGE_LIBRARY_KIND)
-                    }
-                    return@forEach true
-                }
-
-            val architecturyGradleData = GradleUtil.findGradleModuleData(module)?.children
-                ?.find { it.key == ArchitecturyGradleData.KEY }?.data as? ArchitecturyGradleData
-            if (architecturyGradleData?.moduleType == ArchitecturyModel.ModuleType.COMMON) {
-                platformKinds.add(ARCHITECTURY_LIBRARY_KIND)
-                platformKinds.removeIf { it == FABRIC_LIBRARY_KIND }
-            }
             return platformKinds.mapNotNullTo(mutableSetOf()) { kind -> PlatformType.fromLibraryKind(kind) }
         }
 

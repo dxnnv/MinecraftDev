@@ -53,21 +53,6 @@ private entry ::= class_entry | method_entry | field_entry {
     recoverWhile = line_recover
 }
 
-class_entry ::= access class_literal class_name {
-    mixin="com.demonwav.mcdev.platform.mcp.aw.psi.mixins.impl.AwClassEntryImplMixin"
-    implements="com.demonwav.mcdev.platform.mcp.aw.psi.mixins.AwClassEntryMixin"
-}
-
-method_entry ::= access method_literal class_name member_name method_desc{
-    mixin="com.demonwav.mcdev.platform.mcp.aw.psi.mixins.impl.AwMethodEntryImplMixin"
-    implements="com.demonwav.mcdev.platform.mcp.aw.psi.mixins.AwMethodEntryMixin"
-}
-
-field_entry ::= access field_literal class_name member_name field_desc{
-    mixin="com.demonwav.mcdev.platform.mcp.aw.psi.mixins.impl.AwFieldEntryImplMixin"
-    implements="com.demonwav.mcdev.platform.mcp.aw.psi.mixins.AwFieldEntryMixin"
-}
-
 private line_recover ::= !(end_line | COMMENT)
 
 access ::= ACCESS_ELEMENT {
@@ -82,31 +67,6 @@ method_literal ::= METHOD_ELEMENT
 
 field_literal ::= FIELD_ELEMENT
 
-class_name ::= CLASS_NAME_ELEMENT {
-    mixin="com.demonwav.mcdev.platform.mcp.aw.psi.mixins.impl.AwClassNameImplMixin"
-    implements="com.demonwav.mcdev.platform.mcp.aw.psi.mixins.AwClassNameMixin"
-    methods=[
-        classNameElement="CLASS_NAME_ELEMENT"
-    ]
-}
-
-member_name ::= NAME_ELEMENT {
-    mixin= "com.demonwav.mcdev.platform.mcp.aw.psi.mixins.impl.AwMemberNameImplMixin"
-    implements="com.demonwav.mcdev.platform.mcp.aw.psi.mixins.AwMemberNameMixin"
-    methods=[
-        nameElement="NAME_ELEMENT"
-    ]
-}
-
 method_desc ::= OPEN_PAREN desc_element* CLOSE_PAREN desc_element
 
 field_desc ::= desc_element
-
-desc_element ::= PRIMITIVE | CLASS_VALUE {
-    mixin= "com.demonwav.mcdev.platform.mcp.aw.psi.mixins.impl.AwDescElementImplMixin"
-    implements= "com.demonwav.mcdev.platform.mcp.aw.psi.mixins.AwDescElementMixin"
-    methods=[
-        primitive="PRIMITIVE"
-        classValue="CLASS_VALUE"
-    ]
-}

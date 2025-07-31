@@ -67,23 +67,26 @@ class ZipTemplateProvider : TemplateProvider {
 
         return panel {
             row(MCDevBundle("creator.ui.custom.path.label")) {
-                val pathChooserDescriptor = FileChooserDescriptorFactory.createSingleLocalFileDescriptor()
+                val archiveChooser = FileChooserDescriptorFactory
+                    .createSingleLocalFileDescriptor()
                     .withFileFilter { it.extension == "zip" }
-                    .apply { description = MCDevBundle("creator.ui.custom.archive.dialog.description") }
-                textFieldWithBrowseButton(
-                    MCDevBundle("creator.ui.custom.archive.dialog.title"),
-                    null,
-                    pathChooserDescriptor
-                ).align(AlignX.FILL)
+                    .withTitle(MCDevBundle("creator.ui.custom.archive.dialog.title"))
+                    .apply {
+                        description = MCDevBundle("creator.ui.custom.archive.dialog.description")
+                    }
+
+                textFieldWithBrowseButton(archiveChooser.title, project = null) { file -> file.toNioPath().toString() }
+                    .align(AlignX.FILL)
                     .columns(COLUMNS_LARGE)
                     .bindText(pathProperty)
                     .textValidation(
                         validationErrorIf(MCDevBundle("creator.validation.custom.path_not_a_file")) { value ->
-                            runCatching { !Path.of(value).isRegularFile() }.getOrDefault(true)
+                            runCatching { Path.of(value).isRegularFile() }
+                                .getOrDefault(false)
+                                .not()
                         }
                     )
             }
-
             onApply {
                 dataSetter(pathProperty.get())
             }

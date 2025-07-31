@@ -27,7 +27,7 @@ import com.demonwav.mcdev.util.SemanticVersion.Companion.VersionPart.TextPart
 import java.net.URLDecoder
 
 /**
- * Represents a comparable and generalised "semantic version".
+ * Represents a comparable and generalized "semantic version".
  * Each constituent part (delimited by periods in a version string) contributes
  * to the version ranking with decreasing priority from left to right.
  */
@@ -101,14 +101,14 @@ class SemanticVersion(
         fun tryParse(value: String): SemanticVersion? {
             return try {
                 parse(value)
-            } catch (e: IllegalArgumentException) {
+            } catch (_: IllegalArgumentException) {
                 null
             }
         }
 
         /**
          * Parses a version string into a comparable representation.
-         * @throws IllegalArgumentException if any part of the version string cannot be parsed as integer or split into text parts.
+         * @throws IllegalArgumentException if any part of the version's string cannot be parsed as integer or split into text parts.
          */
         fun parse(value: String): SemanticVersion {
             fun parseInt(part: String): Int =
@@ -130,7 +130,7 @@ class SemanticVersion(
             ): VersionPart {
                 val version = parseInt(versionPart)
                 if (!preReleasePart.contains('.')) {
-                    // support the case where pre-releases etc aren't separated by a dot
+                    // support the case where pre-releases etc. aren't separated by a dot
                     val (text, number) = preReleasePart.span { !it.isDigit() }
                     val subParts = when {
                         text.isEmpty() -> listOf(ReleasePart(parseInt(number), number))
@@ -151,7 +151,7 @@ class SemanticVersion(
                 }
             }
 
-            // Regular Minecraft snapshot versions e.g. 24w39a
+            // Regular Minecraft snapshot versions e.g., 24w39a
             fun parseMinecraftSnapshot(value: String): SemanticVersion? {
                 if (value.length != 6 || value[2] != 'w' || !value[5].isLetter()) {
                     return null
@@ -182,12 +182,10 @@ class SemanticVersion(
                     val subParts = part.split(separator, limit = 2)
                     parsePreReleasePart(subParts[0], subParts[1], separator, part)
                 } else {
-                    // Forge has a single version which should be 14.8.* but is actually 14.v8.*
-                    val numberPart = if (part.startsWith('v')) {
-                        part.substring(1)
-                    } else {
-                        part
-                    }
+                    val numberPart =
+                        if (part.startsWith('v'))
+                            part.substring(1)
+                        else part
                     ReleasePart(parseInt(numberPart), part)
                 }
             }

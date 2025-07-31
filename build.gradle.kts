@@ -74,25 +74,14 @@ val templateSourceSets: List<SourceSet> = (file("templates").listFiles() ?: empt
     }
 }
 
-val externalAnnotationsJar = tasks.register<Jar>("externalAnnotationsJar") {
-    from("externalAnnotations")
-    destinationDirectory.set(layout.buildDirectory.dir("externalAnnotations"))
-    archiveFileName.set("externalAnnotations.jar")
-}
-
 dependencies {
     // Add tools.jar for the JDI API
     implementation(files(Jvm.current().toolsJar))
 
     implementation(files(gradleToolingExtensionJar))
 
-    implementation(libs.mixinExtras.expressions) {
-        exclude(group = "org.ow2.asm", module = "asm-debug-all")
-    }
-    testLibs(libs.mixinExtras.common)
     implementation(libs.jgraphx)
 
-    implementation(libs.mappingIo)
     implementation(libs.bundles.asm)
 
     implementation(libs.bundles.fuel)
@@ -122,21 +111,12 @@ dependencies {
         pluginVerifier()
     }
 
-    testLibs(libs.test.mixin)
     testLibs(libs.test.spigotapi)
-    testLibs(libs.test.bungeecord)
-    testLibs(libs.test.spongeapi) {
-        artifact {
-            classifier = "shaded"
-        }
-    }
-    testLibs(libs.test.fabricloader)
     testLibs(libs.test.nbt) {
         artifact {
             extension = "nbt"
         }
     }
-    testLibs(projects.mixinTestData)
 
     // For non-SNAPSHOT versions (unless Jetbrains fixes this...) find the version with:
     // afterEvaluate { println(intellij.ideaDependency.get().buildNumber.substring(intellij.type.get().length + 1)) }
@@ -247,37 +227,17 @@ license {
                 },
             )
         }
-        register("mixinTestData") {
-            files.from(
-                project.fileTree(project.projectDir.resolve("mixin-test-data")) {
-                    include("**/*.java", "**/*.kts")
-                    exclude("**/build/**")
-                },
-            )
-        }
         register("grammars") {
             files.from(project.fileTree("src/main/grammars"))
         }
-        register("externalAnnotations") {
-            files.from(project.fileTree("externalAnnotations"))
-        }
     }
 }
-
-val generateAtLexer by lexer("AtLexer", "com/demonwav/mcdev/platform/mcp/at/gen")
-val generateAtParser by parser("AtParser", "com/demonwav/mcdev/platform/mcp/at/gen")
-
-val generateAwLexer by lexer("AwLexer", "com/demonwav/mcdev/platform/mcp/aw/gen")
-val generateAwParser by parser("AwParser", "com/demonwav/mcdev/platform/mcp/aw/gen")
 
 val generateNbttLexer by lexer("NbttLexer", "com/demonwav/mcdev/nbt/lang/gen")
 val generateNbttParser by parser("NbttParser", "com/demonwav/mcdev/nbt/lang/gen")
 
 val generateLangLexer by lexer("LangLexer", "com/demonwav/mcdev/translations/lang/gen")
 val generateLangParser by parser("LangParser", "com/demonwav/mcdev/translations/lang/gen")
-
-val generateMEExpressionLexer by lexer("MEExpressionLexer", "com/demonwav/mcdev/platform/mixin/expression/gen")
-val generateMEExpressionParser by parser("MEExpressionParser", "com/demonwav/mcdev/platform/mixin/expression/gen")
 
 val generateTranslationTemplateLexer by lexer(
     "TranslationTemplateLexer",
@@ -289,16 +249,10 @@ val generate by tasks.registering {
     description = "Generates sources needed to compile the plugin."
     outputs.dir(layout.buildDirectory.dir("gen"))
     dependsOn(
-        generateAtLexer,
-        generateAtParser,
-        generateAwLexer,
-        generateAwParser,
         generateNbttLexer,
         generateNbttParser,
         generateLangLexer,
         generateLangParser,
-        generateMEExpressionLexer,
-        generateMEExpressionParser,
         generateTranslationTemplateLexer,
     )
 }
@@ -311,9 +265,6 @@ tasks.clean { delete(generate) }
 tasks.withType<PrepareSandboxTask> {
     pluginJar.set(tasks.jar.get().archiveFile)
     val pluginDirName = intellijPlatform.projectName.get()
-    from(externalAnnotationsJar) {
-        into("$pluginDirName/lib/resources")
-    }
     from("templates") {
         exclude(".git")
         into("$pluginDirName/lib/resources/builtin-templates")

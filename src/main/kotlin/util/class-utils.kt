@@ -20,7 +20,6 @@
 
 package com.demonwav.mcdev.util
 
-import com.demonwav.mcdev.platform.mixin.handlers.desugar.DesugarUtil
 import com.intellij.codeInsight.daemon.impl.quickfix.AddMethodFix
 import com.intellij.navigation.AnonymousElementProvider
 import com.intellij.openapi.project.Project
@@ -57,10 +56,9 @@ val PsiClass.outerQualifiedName
 
 val PsiClass.fullQualifiedName
     get(): String? {
-        (DesugarUtil.getOriginalElement(this) as? PsiClass)?.let { return it.fullQualifiedName }
         return try {
-            outerQualifiedName ?: buildQualifiedName(StringBuilder()).toString()
-        } catch (e: ClassNameResolutionFailedException) {
+            buildQualifiedName(StringBuilder()).toString()
+        } catch (_: ClassNameResolutionFailedException) {
             null
         }
     }
@@ -87,7 +85,7 @@ val PsiClass.shortName: String?
             val builder = StringBuilder()
             buildInnerName(builder, PsiClass::outerShortName, '.')
             return builder.toString()
-        } catch (e: ClassNameResolutionFailedException) {
+        } catch (_: ClassNameResolutionFailedException) {
             null
         }
     }

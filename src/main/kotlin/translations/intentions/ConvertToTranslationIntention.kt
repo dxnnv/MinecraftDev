@@ -21,7 +21,6 @@
 package com.demonwav.mcdev.translations.intentions
 
 import com.demonwav.mcdev.TranslationSettings
-import com.demonwav.mcdev.platform.mcp.mappings.getMappedMethodCall
 import com.demonwav.mcdev.translations.TranslationFiles
 import com.demonwav.mcdev.util.findModule
 import com.demonwav.mcdev.util.runWriteAction
@@ -91,14 +90,7 @@ class ConvertToTranslationIntention : PsiElementBaseIntentionAction() {
                 val psi = documentManager.getPsiFile(editor.document) ?: return
                 val callCode = if (translationSettings.isUseCustomConvertToTranslationTemplate) {
                     translationSettings.convertToTranslationTemplate.replace("\$key", key)
-                } else {
-                    element.findModule()?.getMappedMethodCall(
-                        "net.minecraft.client.resource.language.I18n",
-                        "translate",
-                        "(Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/String;",
-                        "\"$key\""
-                    ) ?: "net.minecraft.client.resource.I18n.get(\"$key\")"
-                }
+                } else ""
 
                 val replaceRange = when (literal.lang.id) {
                     // Special case because in Kotlin, the sourcePsi is a template entry, not the literal itself

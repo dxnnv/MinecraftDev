@@ -20,7 +20,6 @@
 
 package com.demonwav.mcdev.util
 
-import com.demonwav.mcdev.platform.mixin.reference.MixinSelector
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiField
@@ -36,10 +35,10 @@ import org.objectweb.asm.Type
 data class MemberReference(
     val name: String,
     val descriptor: String? = null,
-    override val owner: String? = null,
+    val owner: String? = null,
     val matchAllNames: Boolean = false,
     val matchAllDescs: Boolean = false,
-) : Serializable, MixinSelector {
+) : Serializable {
 
     init {
         assert(owner?.contains('/') != true)
@@ -59,9 +58,9 @@ data class MemberReference(
             copy(owner = null)
         }
 
-    override val methodDescriptor = descriptor?.takeIf { it.contains("(") }
-    override val fieldDescriptor = descriptor?.takeUnless { it.contains("(") }
-    override val displayName = name
+    val methodDescriptor = descriptor?.takeIf { it.contains("(") }
+    val fieldDescriptor = descriptor?.takeUnless { it.contains("(") }
+    val displayName = name
 
     val presentableText: String get() = buildString {
         if (owner != null) {
@@ -76,7 +75,7 @@ data class MemberReference(
         }
     }
 
-    override fun canEverMatch(name: String): Boolean {
+    fun canEverMatch(name: String): Boolean {
         return matchAllNames || this.name == name
     }
 
@@ -85,14 +84,14 @@ data class MemberReference(
         return this.owner == null || this.owner == clazz.replace('/', '.')
     }
 
-    override fun matchField(owner: String, name: String, desc: String): Boolean {
+    fun matchField(owner: String, name: String, desc: String): Boolean {
         assert(!owner.contains('.'))
         return (this.matchAllNames || this.name == name) &&
             matchOwner(owner) &&
             (this.descriptor == null || this.descriptor == desc)
     }
 
-    override fun matchMethod(owner: String, name: String, desc: String): Boolean {
+    fun matchMethod(owner: String, name: String, desc: String): Boolean {
         assert(!owner.contains('.'))
         return (this.matchAllNames || this.name == name) &&
             matchOwner(owner) &&
@@ -166,26 +165,6 @@ data class MemberReference(
             return MemberReference(if (matchAllNames) "*" else name, descriptor, owner, matchAllNames, matchAllDescs)
         }
     }
-}
-
-// Class
-
-fun PsiClass.findMethods(member: MixinSelector, checkBases: Boolean = false): Sequence<PsiMethod> {
-    val methods = if (checkBases) {
-        allMethods.asSequence()
-    } else {
-        methods.asSequence()
-    } + constructors
-    return methods.filter { member.matchMethod(it, this) }
-}
-
-fun PsiClass.findField(selector: MixinSelector, checkBases: Boolean = false): PsiField? {
-    val fields = if (checkBases) {
-        allFields.toList()
-    } else {
-        fields.toList()
-    }
-    return fields.firstOrNull { selector.matchField(it, this) }
 }
 
 // Method

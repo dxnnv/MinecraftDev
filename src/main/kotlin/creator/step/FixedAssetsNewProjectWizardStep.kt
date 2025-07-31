@@ -113,8 +113,10 @@ abstract class FixedAssetsNewProjectWizardStep(parent: NewProjectWizardStep) : A
                 is GeneratorTemplateFile -> generateFile(delegate)
                 is GeneratorResourceFile -> generateFile(delegate)
                 is GeneratorEmptyDirectory -> generateFile(delegate)
+                else -> null
             }
             is GeneratorFile -> generateFile(asset)
+            else -> null
         }
     }
 

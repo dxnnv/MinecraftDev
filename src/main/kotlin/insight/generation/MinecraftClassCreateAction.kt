@@ -22,21 +22,10 @@ package com.demonwav.mcdev.insight.generation
 
 import com.demonwav.mcdev.asset.GeneralAssets
 import com.demonwav.mcdev.asset.MCDevBundle
-import com.demonwav.mcdev.asset.PlatformAssets
-import com.demonwav.mcdev.facet.MinecraftFacet
-import com.demonwav.mcdev.platform.fabric.FabricModuleType
-import com.demonwav.mcdev.platform.forge.ForgeModuleType
-import com.demonwav.mcdev.platform.mcp.McpModuleType
-import com.demonwav.mcdev.platform.neoforge.NeoForgeModuleType
-import com.demonwav.mcdev.util.MinecraftTemplates
-import com.demonwav.mcdev.util.MinecraftVersions
-import com.demonwav.mcdev.util.SemanticVersion
-import com.demonwav.mcdev.util.findModule
 import com.intellij.codeInsight.daemon.JavaErrorBundle
 import com.intellij.codeInsight.daemon.impl.analysis.HighlightClassUtil
 import com.intellij.ide.actions.CreateFileFromTemplateDialog
 import com.intellij.ide.actions.CreateTemplateInPackageAction
-import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.DataContext
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
@@ -64,65 +53,10 @@ class MinecraftClassCreateAction :
     override fun buildDialog(project: Project, directory: PsiDirectory, builder: CreateFileFromTemplateDialog.Builder) {
         builder.setTitle(CAPTION)
         builder.setValidator(ClassInputValidator(project, directory))
-
-        val module = directory.findModule() ?: return
-        val isForge = MinecraftFacet.getInstance(module, ForgeModuleType) != null
-        val isNeoForge = MinecraftFacet.getInstance(module, NeoForgeModuleType) != null
-        val isFabric = MinecraftFacet.getInstance(module, FabricModuleType) != null
-        val mcVersion = MinecraftFacet.getInstance(module, McpModuleType)?.getSettings()
-            ?.minecraftVersion?.let(SemanticVersion::parse)
-
-        if (isForge && mcVersion != null) {
-            val icon = PlatformAssets.FORGE_ICON
-
-            if (mcVersion < MinecraftVersions.MC1_17) {
-                builder.addKind("Block", icon, MinecraftTemplates.FORGE_BLOCK_TEMPLATE)
-                builder.addKind("Enchantment", icon, MinecraftTemplates.FORGE_ENCHANTMENT_TEMPLATE)
-                builder.addKind("Item", icon, MinecraftTemplates.FORGE_ITEM_TEMPLATE)
-                builder.addKind("Packet", icon, MinecraftTemplates.FORGE_PACKET_TEMPLATE)
-            } else if (mcVersion < MinecraftVersions.MC1_18) {
-                builder.addKind("Block", icon, MinecraftTemplates.FORGE_1_17_BLOCK_TEMPLATE)
-                builder.addKind("Enchantment", icon, MinecraftTemplates.FORGE_1_17_ENCHANTMENT_TEMPLATE)
-                builder.addKind("Item", icon, MinecraftTemplates.FORGE_1_17_ITEM_TEMPLATE)
-                builder.addKind("Mob Effect", icon, MinecraftTemplates.FORGE_1_17_MOB_EFFECT_TEMPLATE)
-                builder.addKind("Packet", icon, MinecraftTemplates.FORGE_1_17_PACKET_TEMPLATE)
-            } else {
-                builder.addKind("Block", icon, MinecraftTemplates.FORGE_1_17_BLOCK_TEMPLATE)
-                builder.addKind("Enchantment", icon, MinecraftTemplates.FORGE_1_17_ENCHANTMENT_TEMPLATE)
-                builder.addKind("Item", icon, MinecraftTemplates.FORGE_1_17_ITEM_TEMPLATE)
-                builder.addKind("Mob Effect", icon, MinecraftTemplates.FORGE_1_17_MOB_EFFECT_TEMPLATE)
-                builder.addKind("Packet", icon, MinecraftTemplates.FORGE_1_18_PACKET_TEMPLATE)
-            }
-        }
-
-        if (isNeoForge) {
-            val icon = PlatformAssets.NEOFORGE_ICON
-            builder.addKind("Block", icon, MinecraftTemplates.NEOFORGE_BLOCK_TEMPLATE)
-            builder.addKind("Enchantment", icon, MinecraftTemplates.NEOFORGE_ENCHANTMENT_TEMPLATE)
-            builder.addKind("Item", icon, MinecraftTemplates.NEOFORGE_ITEM_TEMPLATE)
-            builder.addKind("Mob Effect", icon, MinecraftTemplates.NEOFORGE_MOB_EFFECT_TEMPLATE)
-            builder.addKind("Packet", icon, MinecraftTemplates.NEOFORGE_PACKET_TEMPLATE)
-        }
-
-        if (isFabric) {
-            val icon = PlatformAssets.FABRIC_ICON
-
-            builder.addKind("Block", icon, MinecraftTemplates.FABRIC_BLOCK_TEMPLATE)
-            builder.addKind("Enchantment", icon, MinecraftTemplates.FABRIC_ENCHANTMENT_TEMPLATE)
-            builder.addKind("Item", icon, MinecraftTemplates.FABRIC_ITEM_TEMPLATE)
-            builder.addKind("Status Effect", icon, MinecraftTemplates.FABRIC_STATUS_EFFECT_TEMPLATE)
-        }
     }
 
     override fun isAvailable(dataContext: DataContext): Boolean {
-        val psi = dataContext.getData(CommonDataKeys.PSI_ELEMENT)
-        val module = psi?.findModule() ?: return false
-        val isFabricMod = MinecraftFacet.getInstance(module, FabricModuleType) != null
-        val isForgeMod = MinecraftFacet.getInstance(module, ForgeModuleType) != null
-        val isNeoForgeMod = MinecraftFacet.getInstance(module, NeoForgeModuleType) != null
-        val hasMcVersion = MinecraftFacet.getInstance(module, McpModuleType)?.getSettings()?.minecraftVersion != null
-
-        return (isFabricMod || isNeoForgeMod || isForgeMod && hasMcVersion) && super.isAvailable(dataContext)
+        return super.isAvailable(dataContext)
     }
 
     override fun checkPackageExists(directory: PsiDirectory): Boolean {

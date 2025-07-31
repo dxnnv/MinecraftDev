@@ -21,7 +21,6 @@
 package com.demonwav.mcdev.creator.custom
 
 import com.demonwav.mcdev.asset.MCDevBundle
-import com.demonwav.mcdev.platform.fabric.util.FabricVersions
 import com.demonwav.mcdev.util.SemanticVersion
 import com.demonwav.mcdev.util.isJavaKeyword
 import com.intellij.openapi.ui.ComboBox
@@ -48,16 +47,6 @@ object BuiltinValidations {
         }
     }
 
-    val nonEmptyYarnVersion = DialogValidation.WithParameter<ComboBox<FabricVersions.YarnVersion>> { combobox ->
-        DialogValidation {
-            if (combobox.item == null) {
-                ValidationInfo(MCDevBundle("creator.validation.semantic_version"))
-            } else {
-                null
-            }
-        }
-    }
-
     val validClassFqn = validationErrorIf<String>(MCDevBundle("creator.validation.class_fqn")) {
         it.isBlank() || it.split('.').any { part ->
             !StringUtil.isJavaIdentifier(part) || part.isJavaKeyword()
@@ -65,7 +54,7 @@ object BuiltinValidations {
     }
 
     fun byRegex(regex: Regex): DialogValidation.WithParameter<() -> String> =
-        validationErrorIf<String>(MCDevBundle("creator.validation.regex", regex)) { !it.matches(regex) }
+        validationErrorIf(MCDevBundle("creator.validation.regex", regex)) { !it.matches(regex) }
 
     fun <T> isAnyOf(
         selectionGetter: () -> T,

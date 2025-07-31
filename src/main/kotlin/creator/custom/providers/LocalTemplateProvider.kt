@@ -66,22 +66,22 @@ class LocalTemplateProvider : TemplateProvider {
         val pathProperty = propertyGraph.property(data)
         return panel {
             row(MCDevBundle("creator.ui.custom.path.label")) {
-                val pathChooserDescriptor = FileChooserDescriptorFactory.createSingleFolderDescriptor().apply {
-                    description = MCDevBundle("creator.ui.custom.path.dialog.description")
-                }
-                textFieldWithBrowseButton(
-                    MCDevBundle("creator.ui.custom.path.dialog.title"),
-                    null,
-                    pathChooserDescriptor
-                ).align(AlignX.FILL)
+                val descriptor = FileChooserDescriptorFactory
+                    .createSingleFolderDescriptor()
+                    .withTitle(MCDevBundle("creator.ui.custom.path.dialog.title"))
+                    .apply {
+                        description = MCDevBundle("creator.ui.custom.path.dialog.description")
+                    }
+
+                textFieldWithBrowseButton(descriptor.title, project = null) { file -> file.toNioPath().toString() }
+                    .align(AlignX.FILL)
                     .columns(COLUMNS_LARGE)
                     .bindText(pathProperty)
                     .textValidation(
                         validationErrorIf(MCDevBundle("creator.validation.custom.path_not_a_directory")) { value ->
-                            val file = kotlin.runCatching {
+                            kotlin.runCatching {
                                 VirtualFileManager.getInstance().findFileByNioPath(Path.of(value))
-                            }.getOrNull()
-                            file == null || !file.isDirectory
+                            }.getOrNull()?.isDirectory != true
                         }
                     )
             }

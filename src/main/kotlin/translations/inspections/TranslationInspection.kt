@@ -20,7 +20,6 @@
 
 package com.demonwav.mcdev.translations.inspections
 
-import com.demonwav.mcdev.platform.mcp.McpModuleType
 import com.intellij.codeInspection.InspectionManager
 import com.intellij.codeInspection.LocalInspectionTool
 import com.intellij.codeInspection.ProblemDescriptor
@@ -31,19 +30,7 @@ import com.intellij.psi.PsiFile
 abstract class TranslationInspection : LocalInspectionTool() {
     protected abstract fun buildVisitor(holder: ProblemsHolder): PsiElementVisitor
 
-    final override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean): PsiElementVisitor {
-        if (McpModuleType.isInModule(holder.file)) {
-            return buildVisitor(holder)
-        }
+    final override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean): PsiElementVisitor = PsiElementVisitor.EMPTY_VISITOR
 
-        return PsiElementVisitor.EMPTY_VISITOR
-    }
-
-    final override fun processFile(file: PsiFile, manager: InspectionManager): List<ProblemDescriptor> {
-        return if (McpModuleType.isInModule(file)) {
-            super.processFile(file, manager)
-        } else {
-            listOf()
-        }
-    }
+    final override fun processFile(file: PsiFile, manager: InspectionManager): List<ProblemDescriptor> = listOf()
 }

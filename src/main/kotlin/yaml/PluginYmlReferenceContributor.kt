@@ -24,8 +24,6 @@ import com.demonwav.mcdev.facet.MinecraftFacet
 import com.demonwav.mcdev.platform.bukkit.PaperModuleType
 import com.demonwav.mcdev.platform.bukkit.SpigotModuleType
 import com.demonwav.mcdev.platform.bukkit.util.BukkitConstants
-import com.demonwav.mcdev.platform.bungeecord.BungeeCordModuleType
-import com.demonwav.mcdev.platform.bungeecord.util.BungeeCordConstants
 import com.demonwav.mcdev.util.findModule
 import com.intellij.codeInsight.completion.JavaLookupElementBuilder
 import com.intellij.lang.jvm.JvmModifier
@@ -57,16 +55,6 @@ private fun <P : ObjectPattern<out PsiElement, P>> P.inSpigotOrPaperPluginYml():
     }
 )
 
-private fun <P : ObjectPattern<out PsiElement, P>> P.inBungeePluginYml(): P = with(
-    object : PatternCondition<PsiElement>("") {
-        override fun accepts(t: PsiElement, context: ProcessingContext): Boolean {
-            val module = t.findModule() ?: return false
-            val instance = MinecraftFacet.getInstance(module, BungeeCordModuleType) ?: return false
-            return instance.pluginYml == t.containingFile.originalFile.virtualFile
-        }
-    }
-)
-
 class PluginYmlReferenceContributor : PsiReferenceContributor() {
 
     override fun registerReferenceProviders(registrar: PsiReferenceRegistrar) {
@@ -75,12 +63,6 @@ class PluginYmlReferenceContributor : PsiReferenceContributor() {
                 .withParent(PlatformPatterns.psiElement(YAMLKeyValue::class.java).withName("main"))
                 .inSpigotOrPaperPluginYml(),
             PluginYmlClassReferenceProvider(BukkitConstants.PLUGIN)
-        )
-        registrar.registerReferenceProvider(
-            PlatformPatterns.psiElement(YAMLScalar::class.java)
-                .withParent(PlatformPatterns.psiElement(YAMLKeyValue::class.java).withName("main"))
-                .inBungeePluginYml(),
-            PluginYmlClassReferenceProvider(BungeeCordConstants.PLUGIN)
         )
     }
 }

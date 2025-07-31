@@ -20,7 +20,6 @@
 
 package com.demonwav.mcdev.translations
 
-import com.demonwav.mcdev.TranslationSettings
 import com.demonwav.mcdev.translations.index.TranslationIndex
 import com.demonwav.mcdev.translations.index.TranslationInverseIndex
 import com.demonwav.mcdev.translations.lang.LangFile
@@ -31,12 +30,10 @@ import com.demonwav.mcdev.translations.sorting.EmptyLine
 import com.demonwav.mcdev.translations.sorting.Key
 import com.demonwav.mcdev.translations.sorting.Template
 import com.demonwav.mcdev.translations.sorting.TemplateElement
-import com.demonwav.mcdev.util.SemanticVersion
 import com.demonwav.mcdev.util.applyWriteAction
 import com.demonwav.mcdev.util.findModule
 import com.demonwav.mcdev.util.mcDomain
 import com.demonwav.mcdev.util.mcPath
-import com.demonwav.mcdev.util.mcVersion
 import com.intellij.ide.DataManager
 import com.intellij.json.JsonElementTypes
 import com.intellij.json.JsonFileType
@@ -57,11 +54,9 @@ import com.intellij.psi.search.FileTypeIndex
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.util.DocumentUtil
 import com.intellij.util.indexing.FileBasedIndex
-import java.util.Locale
+import java.util.*
 
 object TranslationFiles {
-    private val MC_1_12_2 = SemanticVersion.release(1, 12, 2)
-
     fun isTranslationFile(file: VirtualFile?): Boolean {
         val mcPath = file?.mcPath ?: return false
         return mcPath.startsWith("lang/") && file.fileType in listOf(LangFileType, JsonFileType.INSTANCE)
@@ -115,17 +110,6 @@ object TranslationFiles {
     fun findTranslationKeyForText(context: PsiElement, text: String): String? {
         val module = context.findModule()
             ?: throw IllegalArgumentException("Cannot add translation for element outside of module")
-        var jsonVersion = true
-        if (!TranslationSettings.getInstance(context.project).isForceJsonTranslationFile) {
-            val version =
-                context.mcVersion ?: throw IllegalArgumentException("Cannot determine MC version for element $context")
-            jsonVersion = version > MC_1_12_2
-        }
-
-        if (!jsonVersion) {
-            // This feature only supports JSON translation files
-            return null
-        }
 
         val files = FileTypeIndex.getFiles(
             JsonFileType.INSTANCE,
@@ -143,29 +127,18 @@ object TranslationFiles {
     fun add(context: PsiElement, key: String, text: String) {
         val module = context.findModule()
             ?: throw IllegalArgumentException("Cannot add translation for element outside of module")
-        var jsonVersion = true
-        if (!TranslationSettings.getInstance(context.project).isForceJsonTranslationFile) {
-            val version =
-                context.mcVersion ?: throw IllegalArgumentException("Cannot determine MC version for element $context")
-            jsonVersion = version > MC_1_12_2
-        }
 
         fun write(files: Iterable<VirtualFile>) {
             for (file in files) {
                 val psiFile = PsiManager.getInstance(context.project).findFile(file) ?: continue
                 psiFile.applyWriteAction {
                     val entries = listOf(FileEntry.Translation(key, text))
-                    if (jsonVersion) {
-                        this.persistAsJson(entries)
-                    } else {
-                        this.persistAsLang(entries)
-                    }
+                    this.persistAsJson(entries)
                 }
             }
         }
 
-        val files = FileTypeIndex.getFiles(
-            if (jsonVersion) JsonFileType.INSTANCE else LangFileType,
+        val files = FileTypeIndex.getFiles(JsonFileType.INSTANCE,
             GlobalSearchScope.moduleScope(module),
         ).filter { getLocale(it) == TranslationConstants.DEFAULT_LOCALE }
         val domains = files.asSequence().mapNotNull { it.mcDomain }.distinct().sorted().toList()
@@ -238,9 +211,6 @@ object TranslationFiles {
                 is FileEntry.Comment -> result.append("# ${entry.text}\n")
                 is FileEntry.Translation -> result.append("${entry.key}=${entry.text}\n")
                 FileEntry.EmptyLine -> result.append('\n')
-                // TODO: IntelliJ shows a false error here without the `else`. The compiler doesn't care because
-                //  FileEntry is a sealed class. When this bug in IntelliJ is fixed, remove this `else`.
-                else -> {}
             }
         }
 
@@ -282,9 +252,6 @@ object TranslationFiles {
                     result.append("\"${StringUtil.escapeStringCharacters(entry.text)}\",\n")
                 }
                 FileEntry.EmptyLine -> result.append('\n')
-                // TODO: IntelliJ shows a false error here without the `else`. The compiler doesn't care because
-                //  FileEntry is a sealed class. When this bug in IntelliJ is fixed, remove this `else`.
-                else -> {}
             }
         }
 
@@ -332,12 +299,6 @@ object TranslationFiles {
     fun buildSortingTemplateFromDefault(context: PsiElement, domain: String? = null): Template? {
         val module = context.findModule()
             ?: throw IllegalArgumentException("Cannot add translation for element outside of module")
-        var jsonVersion = true
-        if (!TranslationSettings.getInstance(context.project).isForceJsonTranslationFile) {
-            val version =
-                context.mcVersion ?: throw IllegalArgumentException("Cannot determine MC version for element $context")
-            jsonVersion = version > MC_1_12_2
-        }
 
         val defaultTranslationFile = FileBasedIndex.getInstance()
             .getContainingFiles(
@@ -347,7 +308,7 @@ object TranslationFiles {
             )
             .asSequence()
             .filter { domain == null || it.mcDomain == domain }
-            .filter { (jsonVersion && it.fileType == JsonFileType.INSTANCE) || it.fileType == LangFileType }
+            .filter { it.fileType == JsonFileType.INSTANCE || it.fileType == LangFileType }
             .firstOrNull() ?: return null
         val psi = PsiManager.getInstance(context.project).findFile(defaultTranslationFile) ?: return null
 
