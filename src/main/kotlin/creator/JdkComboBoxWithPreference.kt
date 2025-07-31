@@ -126,6 +126,7 @@ fun Row.jdkComboBoxWithPreference(
     }
 
     val project = context.project
+    // This will be called from a background thread to avoid EDT freeze
     sdkModel.reset(project)
 
     val preferenceData = JdkPreferenceData(JavaSdkVersion.JDK_17, mutableMapOf(), false)

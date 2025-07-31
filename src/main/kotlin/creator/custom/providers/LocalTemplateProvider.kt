@@ -76,10 +76,9 @@ class LocalTemplateProvider : TemplateProvider {
                     .bindText(pathProperty)
                     .textValidation(
                         validationErrorIf(MCDevBundle("creator.validation.custom.path_not_a_directory")) { value ->
-                            val file = kotlin.runCatching {
+                            kotlin.runCatching {
                                 VirtualFileManager.getInstance().findFileByNioPath(Path.of(value))
-                            }.getOrNull()
-                            file == null || !file.isDirectory
+                            }.getOrNull()?.isDirectory != true
                         }
                     )
             }

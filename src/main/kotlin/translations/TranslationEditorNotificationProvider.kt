@@ -24,7 +24,6 @@ import com.demonwav.mcdev.translations.index.TranslationIndex
 import com.demonwav.mcdev.translations.sorting.Ordering
 import com.demonwav.mcdev.translations.sorting.TranslationSorter
 import com.demonwav.mcdev.util.applyWriteAction
-import com.demonwav.mcdev.util.findMcpModule
 import com.demonwav.mcdev.util.mcDomain
 import com.intellij.notification.Notification
 import com.intellij.notification.NotificationType
@@ -34,7 +33,6 @@ import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.MessageDialogBuilder
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiManager
 import com.intellij.ui.EditorNotificationPanel
 import com.intellij.ui.EditorNotificationProvider
@@ -60,9 +58,8 @@ class TranslationEditorNotificationProvider : EditorNotificationProvider {
             return null
         }
 
-        val hasMcpModule = file.findPsiFile(project)?.findMcpModule() != null
         return Function {
-            createNotificationPanel(missingTranslations, hasMcpModule, file, project)
+            createNotificationPanel(missingTranslations, false, file, project)
         }
     }
 

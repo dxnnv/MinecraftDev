@@ -31,14 +31,7 @@ body:
       options:
         - Spigot
         - Paper
-        - Sponge
-        - Architectury
-        - Minecraft Forge
-        - NeoForge
-        - Fabric
         - Velocity
-        - BungeeCord
-        - Waterfall
     validations:
       required: true
   - type: textarea

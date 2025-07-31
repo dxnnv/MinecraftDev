@@ -32,15 +32,7 @@ body:
         - Bukkit
         - Spigot
         - Paper
-        - Sponge
-        - Architectury
-        - Minecraft Forge
-        - NeoForge
-        - Fabric
         - Velocity
-        - Mixins
-        - BungeeCord
-        - Waterfall
     validations:
       required: false
   - type: textarea

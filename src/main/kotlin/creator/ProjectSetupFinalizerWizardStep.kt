@@ -161,10 +161,17 @@ class JdkProjectSetupFinalizer(
     override fun setupUI(builder: Panel) {
         with(builder) {
             row("JDK:") {
-                val sdkComboBox = jdkComboBoxWithPreference(context, sdkProperty, "${javaClass.name}.sdk")
-                this@JdkProjectSetupFinalizer.sdkComboBox = sdkComboBox.component
+                val comboBoxCell = cell(JPanel())
                 this@JdkProjectSetupFinalizer.preferredJdkLabel = placeholder()
-                updatePreferredJdkLabel()
+
+                com.intellij.openapi.application.ApplicationManager.getApplication().executeOnPooledThread {
+                    val sdkComboBox = jdkComboBoxWithPreference(context, sdkProperty, "${javaClass.name}.sdk")
+                    com.intellij.openapi.application.ApplicationManager.getApplication().invokeLater {
+                        comboBoxCell.applyToComponent { sdkComboBox.component }
+                        this@JdkProjectSetupFinalizer.sdkComboBox = sdkComboBox.component
+                        updatePreferredJdkLabel()
+                    }
+                }
             }
         }
     }

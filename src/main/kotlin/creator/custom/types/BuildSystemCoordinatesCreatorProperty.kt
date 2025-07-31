@@ -79,51 +79,84 @@ class BuildSystemCoordinatesCreatorProperty(
     override fun setupProperty(reporter: TemplateValidationReporter) {
         super.setupProperty(reporter)
 
-        val projectNameProperty = properties["PROJECT_NAME"]?.graphProperty
-        if (projectNameProperty != null) {
-            val projectName = projectNameProperty.get()
-            if (projectName is String) {
-                coords = coords.copy(artifactId = projectName)
-            }
+        val presetProp = properties["PRESET"]?.graphProperty
+        val nameProp = properties["PROJECT_NAME"]?.graphProperty
+        val versionOverrideProp = properties["COORD_VERSION"]?.graphProperty
 
-            graphProperty.dependsOn(projectNameProperty, false) {
-                val newProjectName = projectNameProperty.get()
-                if (newProjectName is String) {
-                    val sanitizedArtifactId = newProjectName.lowercase()
-                        .replace(Regex("\\W+"), "-")
-                        .removeSuffix("-")
-                    coords.copy(artifactId = sanitizedArtifactId)
-                } else {
-                    coords
+        if (presetProp != null && nameProp != null) {
+
+            presetProp.afterChange { preset ->
+                val pluginName = nameProp.get()
+                if (pluginName !is String) return@afterChange
+
+                when (preset) {
+                    "Self" -> coords = BuildSystemCoordinates(
+                        groupId    = "dev.dxnny",
+                        artifactId = pluginName.lowercase(),
+                        version    = coords.version
+                    )
+                    "Org" -> coords = BuildSystemCoordinates(
+                        groupId    = "com.flamefrags",
+                        artifactId = pluginName.lowercase(),
+                        version    = coords.version
+                    )
+                    else -> {}
                 }
             }
+
+            nameProp.afterChange { pluginName ->
+                val preset = presetProp.get()
+                if (pluginName !is String) return@afterChange
+
+                when (preset) {
+                    "Self" -> coords = coords.copy(artifactId = pluginName.lowercase())
+                    "Org" -> coords = coords.copy(artifactId = pluginName.lowercase())
+                    else -> {}
+                }
+            }
+        }
+
+        versionOverrideProp?.afterChange { newVersion ->
+            if (newVersion !is String) return@afterChange
+            coords = coords.copy(version = newVersion)
         }
     }
 
     override fun buildUi(panel: Panel) {
-        panel.collapsibleGroup(MCDevBundle("creator.ui.group.title")) {
-            this.row(MCDevBundle("creator.ui.group.group_id")) {
-                this.textField()
-                    .bindText(this@BuildSystemCoordinatesCreatorProperty.groupIdProperty)
-                    .columns(COLUMNS_MEDIUM)
-                    .validationRequestor(WHEN_GRAPH_PROPAGATION_FINISHED(graph))
-                    .textValidation(CHECK_NON_EMPTY, CHECK_GROUP_ID, nonExampleValidation)
-            }
-            this.row(MCDevBundle("creator.ui.group.artifact_id")) {
-                this.textField()
-                    .bindText(this@BuildSystemCoordinatesCreatorProperty.artifactIdProperty)
-                    .columns(COLUMNS_MEDIUM)
-                    .validationRequestor(WHEN_GRAPH_PROPAGATION_FINISHED(graph))
-                    .textValidation(CHECK_NON_EMPTY, CHECK_ARTIFACT_ID)
-            }
-            this.row(MCDevBundle("creator.ui.group.version")) {
-                this.textField()
-                    .bindText(this@BuildSystemCoordinatesCreatorProperty.versionProperty)
-                    .columns(COLUMNS_MEDIUM)
-                    .validationRequestor(WHEN_GRAPH_PROPAGATION_FINISHED(graph))
-                    .textValidation(BuiltinValidations.validVersion)
-            }
-        }.expanded = true
+        val presetProp = context.properties["PRESET"]!!.graphProperty
+
+        val wrapper = panel.panel {
+            collapsibleGroup(MCDevBundle("creator.ui.group.title")) {
+                this.row(MCDevBundle("creator.ui.group.group_id")) {
+                    this.textField()
+                        .bindText(this@BuildSystemCoordinatesCreatorProperty.groupIdProperty)
+                        .columns(COLUMNS_MEDIUM)
+                        .validationRequestor(WHEN_GRAPH_PROPAGATION_FINISHED(graph))
+                        .textValidation(CHECK_NON_EMPTY, CHECK_GROUP_ID, nonExampleValidation)
+                }
+                this.row(MCDevBundle("creator.ui.group.artifact_id")) {
+                    this.textField()
+                        .bindText(this@BuildSystemCoordinatesCreatorProperty.artifactIdProperty)
+                        .columns(COLUMNS_MEDIUM)
+                        .validationRequestor(WHEN_GRAPH_PROPAGATION_FINISHED(graph))
+                        .textValidation(CHECK_NON_EMPTY, CHECK_ARTIFACT_ID)
+                }
+                this.row(MCDevBundle("creator.ui.group.version")) {
+                    this.textField()
+                        .bindText(this@BuildSystemCoordinatesCreatorProperty.versionProperty)
+                        .columns(COLUMNS_MEDIUM)
+                        .validationRequestor(WHEN_GRAPH_PROPAGATION_FINISHED(graph))
+                        .textValidation(BuiltinValidations.validVersion)
+                }
+            }.expanded = true
+        }
+
+        wrapper.visible(presetProp.get() == "Custom")
+
+
+        presetProp.afterChange { newPreset ->
+            wrapper.visible(newPreset == "Custom")
+        }
     }
 
     class Factory : CreatorPropertyFactory {

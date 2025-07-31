@@ -25,7 +25,6 @@ import com.intellij.ide.projectView.ProjectView
 import com.intellij.ide.projectWizard.generators.AssetsNewProjectWizardStep
 import com.intellij.ide.starters.local.GeneratorAsset
 import com.intellij.ide.starters.local.GeneratorEmptyDirectory
-import com.intellij.ide.starters.local.GeneratorFile
 import com.intellij.ide.starters.local.GeneratorResourceFile
 import com.intellij.ide.starters.local.GeneratorTemplateFile
 import com.intellij.ide.wizard.AbstractNewProjectWizardStep
@@ -51,14 +50,20 @@ import java.nio.file.Path
  */
 abstract class FixedAssetsNewProjectWizardStep(parent: NewProjectWizardStep) : AbstractNewProjectWizardStep(parent) {
     lateinit var outputDirectory: String
-    private val assets = arrayListOf<GeneratorAsset>()
+    private val assets = arrayListOf<FixedGeneratorAsset>()
     val templateProperties = hashMapOf<String, Any?>()
     private val filesToOpen = hashSetOf<String>()
 
-    fun addAssets(vararg assets: GeneratorAsset) = addAssets(assets.toList())
+    fun addAssets(vararg assets: Any) = addAssets(assets.toList())
 
-    fun addAssets(assets: Iterable<GeneratorAsset>) {
-        this.assets += assets
+    fun addAssets(assets: Iterable<Any>) {
+        assets.mapTo(this.assets) { asset ->
+            when (asset) {
+                is GeneratorAsset -> GeneratorAssetDelegate(asset)
+                is FixedGeneratorAsset -> asset
+                else -> throw IllegalArgumentException("$asset is not a valid asset")
+            }
+        }
     }
 
     fun addTemplateProperties(vararg properties: Pair<String, Any?>) = addTemplateProperties(properties.toMap())
@@ -102,12 +107,16 @@ abstract class FixedAssetsNewProjectWizardStep(parent: NewProjectWizardStep) : A
         }
     }
 
-    private fun generateFile(asset: GeneratorAsset): VirtualFile? {
+    private fun generateFile(asset: FixedGeneratorAsset): VirtualFile? {
         return when (asset) {
-            is GeneratorTemplateFile -> generateFile(asset)
-            is GeneratorResourceFile -> generateFile(asset)
-            is GeneratorEmptyDirectory -> generateFile(asset)
+            is GeneratorAssetDelegate -> when (val delegate = asset.delegate) {
+                is GeneratorTemplateFile -> generateFile(delegate)
+                is GeneratorResourceFile -> generateFile(delegate)
+                is GeneratorEmptyDirectory -> generateFile(delegate)
+                else -> null
+            }
             is GeneratorFile -> generateFile(asset)
+            else -> null
         }
     }
 
@@ -145,7 +154,7 @@ abstract class FixedAssetsNewProjectWizardStep(parent: NewProjectWizardStep) : A
     }
 
     private fun generateFile(asset: GeneratorFile): VirtualFile? {
-        val pathStr = "$outputDirectory/${asset.relativePath}"
+        val pathStr = "$outputDirectory/${asset.targetFileName}"
         val path = Path.of(pathStr)
         path.parent?.let(NioFiles::createDirectories)
         Files.write(path, asset.content)
@@ -170,3 +179,18 @@ abstract class FixedAssetsNewProjectWizardStep(parent: NewProjectWizardStep) : A
     }
 }
 
+// This can be removed when https://github.com/JetBrains/intellij-community/pull/2304 is merged
+sealed class FixedGeneratorAsset {
+    abstract val targetFileName: String
+}
+
+data class GeneratorAssetDelegate(val delegate: GeneratorAsset) : FixedGeneratorAsset() {
+    override val targetFileName get() = delegate.relativePath
+}
+
+class GeneratorFile(
+    override val targetFileName: String,
+    val content: ByteArray,
+) : FixedGeneratorAsset() {
+    constructor(targetFileName: String, contents: String) : this(targetFileName, contents.encodeToByteArray())
+}

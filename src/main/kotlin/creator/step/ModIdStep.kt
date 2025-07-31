@@ -39,9 +39,6 @@ import com.intellij.ui.dsl.builder.textValidation
 private val validModIdRegex = "[a-z][a-z0-9-_]{1,63}".toRegex()
 private val invalidModIdRegex = "[^a-z0-9-_]+".toRegex()
 
-private val validForgeModIdRegex = "[a-z][a-z0-9_]{1,63}".toRegex()
-private val invalidForgeModIdRegex = "[^a-z0-9_]+".toRegex()
-
 abstract class AbstractModIdStep(
     parent: NewProjectWizardStep,
     private val validRegex: Regex = validModIdRegex,
@@ -91,11 +88,6 @@ abstract class AbstractModIdStep(
 }
 
 class ModIdStep(parent: NewProjectWizardStep) : AbstractModIdStep(parent) {
-    override val label = "Mod Id:"
-}
-
-class ForgeStyleModIdStep(parent: NewProjectWizardStep) :
-    AbstractModIdStep(parent, validForgeModIdRegex, invalidForgeModIdRegex) {
     override val label = "Mod Id:"
 }
 

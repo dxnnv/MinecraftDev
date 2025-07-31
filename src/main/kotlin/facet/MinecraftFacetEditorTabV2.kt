@@ -47,16 +47,7 @@ class MinecraftFacetEditorTabV2(private val configuration: MinecraftFacetConfigu
     val bukkit = platformState(PlatformType.BUKKIT)
     val spigot = platformState(PlatformType.SPIGOT)
     val paper = platformState(PlatformType.PAPER)
-    val sponge = platformState(PlatformType.SPONGE)
-    val forge = platformState(PlatformType.FORGE)
-    val neoforge = platformState(PlatformType.NEOFORGE)
-    val fabric = platformState(PlatformType.FABRIC)
-    val architectury = platformState(PlatformType.ARCHITECTURY)
-    val mcp = platformState(PlatformType.MCP)
-    val mixin = platformState(PlatformType.MIXIN)
     val velocity = platformState(PlatformType.VELOCITY)
-    val bungeecord = platformState(PlatformType.BUNGEECORD)
-    val waterfall = platformState(PlatformType.WATERFALL)
     val adventure = platformState(PlatformType.ADVENTURE)
 
     override fun createComponent(): JComponent = panel {
@@ -85,73 +76,7 @@ class MinecraftFacetEditorTabV2(private val configuration: MinecraftFacetConfigu
                 { afterChange { _ -> all(this, bukkit.auto, spigot.auto)(bukkit, spigot, paper) } },
             )
 
-            val isDarkMode = !JBColor.isBright()
-            val spongeIcon = if (isDarkMode) PlatformAssets.SPONGE_ICON_2X_DARK else PlatformAssets.SPONGE_ICON_2X
-            createRow(sponge, "Sponge", spongeIcon)
-
-            createRow(
-                forge, "Forge", PlatformAssets.FORGE_ICON_2X,
-                {
-                    afterChange { _ ->
-                        also(this, mcp.enabled)
-                        unique(this, architectury.enabled)
-                    }
-                },
-                {
-                    afterChange { _ ->
-                        all(this, fabric.auto, architectury.auto)(forge, fabric, architectury)
-                    }
-                },
-            )
-
-            createRow(neoforge, "NeoForge", PlatformAssets.NEOFORGE_ICON_2X)
-
-            createRow(
-                fabric, "Fabric", PlatformAssets.FABRIC_ICON_2X,
-                {
-                    afterChange { _ ->
-                        also(this, mixin.enabled, mcp.enabled)
-                        unique(this, architectury.enabled)
-                    }
-                },
-                {
-                    afterChange { _ ->
-                        all(this, forge.auto, architectury.auto)(fabric, forge, architectury)
-                    }
-                },
-            )
-
-            createRow(
-                architectury, "Architectury", PlatformAssets.ARCHITECTURY_ICON_2X,
-                { afterChange { _ -> unique(this, fabric.enabled, forge.enabled) } },
-                {
-                    afterChange { _ ->
-                        all(this, forge.auto, fabric.auto)(architectury, forge, fabric)
-                    }
-                },
-            )
-
-            val mcpIcon = if (isDarkMode) PlatformAssets.MCP_ICON_2X_DARK else PlatformAssets.MCP_ICON_2X
-            createRow(mcp, "MCP", mcpIcon)
-
-            val mixinIcon = if (isDarkMode) PlatformAssets.MIXIN_ICON_2X_DARK else PlatformAssets.MIXIN_ICON_2X
-            createRow(
-                mixin, "Mixin", mixinIcon,
-                { afterChange { _ -> also(this, mcp.enabled) } }
-            )
-
             createRow(velocity, "Velocity", PlatformAssets.VELOCITY_ICON_2X)
-
-            createRow(
-                bungeecord, "BungeeCord", PlatformAssets.BUNGEECORD_ICON_2X,
-                { afterChange { _ -> unique(this, waterfall.enabled) } }
-            )
-
-            createRow(
-                waterfall, "Waterfall", PlatformAssets.WATERFALL_ICON_2X,
-                { afterChange { _ -> unique(this, bungeecord.enabled) } }
-            )
-
             createRow(adventure, "Adventure", PlatformAssets.ADVENTURE_ICON_2X)
         }
     }

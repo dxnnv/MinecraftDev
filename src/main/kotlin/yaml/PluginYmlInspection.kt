@@ -24,8 +24,6 @@ import com.demonwav.mcdev.facet.MinecraftFacet
 import com.demonwav.mcdev.platform.bukkit.PaperModuleType
 import com.demonwav.mcdev.platform.bukkit.SpigotModuleType
 import com.demonwav.mcdev.platform.bukkit.util.BukkitConstants
-import com.demonwav.mcdev.platform.bungeecord.BungeeCordModuleType
-import com.demonwav.mcdev.platform.bungeecord.util.BungeeCordConstants
 import com.demonwav.mcdev.util.findModule
 import com.intellij.codeInspection.LocalInspectionTool
 import com.intellij.codeInspection.ProblemsHolder
@@ -48,8 +46,6 @@ class PluginYmlInspection : LocalInspectionTool() {
         val pluginClassFqn = when {
             MinecraftFacet.getInstance(module, SpigotModuleType, PaperModuleType)?.pluginYml == virtualFile ->
                 BukkitConstants.PLUGIN
-            MinecraftFacet.getInstance(module, BungeeCordModuleType)?.pluginYml == virtualFile ->
-                BungeeCordConstants.PLUGIN
             else -> return PsiElementVisitor.EMPTY_VISITOR
         }
 

@@ -30,10 +30,7 @@ pluginManagement {
 }
 
 rootProject.name = "MinecraftDev"
-include("obfuscation-explorer")
 
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
-
-include("mixin-test-data")
 
 startParameter.warningMode = WarningMode.All

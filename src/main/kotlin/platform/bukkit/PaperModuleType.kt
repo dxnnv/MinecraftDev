@@ -26,7 +26,6 @@ import com.demonwav.mcdev.platform.AbstractModuleType
 import com.demonwav.mcdev.platform.PlatformType
 import com.demonwav.mcdev.platform.bukkit.generation.BukkitEventGenerationPanel
 import com.demonwav.mcdev.platform.bukkit.util.BukkitConstants
-import com.demonwav.mcdev.platform.bungeecord.util.BungeeCordConstants
 import com.demonwav.mcdev.util.CommonColors
 import com.intellij.psi.PsiClass
 
@@ -36,7 +35,6 @@ object PaperModuleType : AbstractModuleType<BukkitModule<PaperModuleType>>("com.
 
     init {
         CommonColors.applyStandardColors(colorMap, BukkitConstants.CHAT_COLOR_CLASS)
-        CommonColors.applyStandardColors(colorMap, BungeeCordConstants.CHAT_COLOR_CLASS)
     }
 
     override val platformType = PlatformType.PAPER

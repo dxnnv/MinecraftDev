@@ -50,8 +50,6 @@ data class MinecraftFacetConfigurationData(
     @Tag("autoDetectTypes")
     @XCollection(elementName = "platformType", valueAttributeName = "", style = XCollection.Style.v2)
     var autoDetectTypes: MutableSet<PlatformType> = mutableSetOf(),
-    @Tag("forgePatcher")
-    var forgePatcher: Boolean = false,
     @Tag("projectReimportVersion")
     var projectReimportVersion: Int = 0,
 )

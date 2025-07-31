@@ -18,7 +18,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import io.sentry.android.gradle.extensions.SentryPluginExtension
 import org.gradle.kotlin.dsl.configure
 import org.jetbrains.changelog.Changelog
 import org.jetbrains.gradle.ext.settings
@@ -33,7 +32,6 @@ plugins {
     `mcdev-core`
     `mcdev-parsing`
     `mcdev-publishing`
-    alias(libs.plugins.sentry) apply (System.getenv("CI") == "true" && System.getenv("NO_SENTRY") != "true")
 }
 
 val coreVersion: String by project
@@ -76,28 +74,14 @@ val templateSourceSets: List<SourceSet> = (file("templates").listFiles() ?: empt
     }
 }
 
-val externalAnnotationsJar = tasks.register<Jar>("externalAnnotationsJar") {
-    from("externalAnnotations")
-    destinationDirectory.set(layout.buildDirectory.dir("externalAnnotations"))
-    archiveFileName.set("externalAnnotations.jar")
-}
-
 dependencies {
     implementation(files(gradleToolingExtensionJar))
 
-    implementation(libs.mixinExtras.expressions) {
-        exclude(group = "org.ow2.asm", module = "asm-debug-all")
-    }
-    testLibs(libs.mixinExtras.common)
     implementation(libs.jgraphx)
 
-    implementation(libs.mappingIo)
     implementation(libs.bundles.asm)
 
     implementation(libs.bundles.fuel)
-    implementation(libs.sentry) {
-        exclude(group = "org.slf4j")
-    }
 
     intellijPlatform {
         intellijIdeaCommunity(libs.versions.intellij.ide, useInstaller = false)
@@ -111,7 +95,6 @@ dependencies {
         bundledPlugin("org.intellij.intelliLang")
         bundledPlugin("com.intellij.properties")
         bundledPlugin("Git4Idea")
-        bundledPlugin("com.intellij.modules.json")
 
         // Optional dependencies
         bundledPlugin("org.jetbrains.kotlin")
@@ -120,27 +103,17 @@ dependencies {
 
 
         testFramework(TestFrameworkType.JUnit5)
-        testFramework(TestFrameworkType.Platform)
         testFramework(TestFrameworkType.Plugin.Java)
 
         pluginVerifier()
     }
 
-    testLibs(libs.test.mixin)
     testLibs(libs.test.spigotapi)
-    testLibs(libs.test.bungeecord)
-    testLibs(libs.test.spongeapi) {
-        artifact {
-            classifier = "shaded"
-        }
-    }
-    testLibs(libs.test.fabricloader)
     testLibs(libs.test.nbt) {
         artifact {
             extension = "nbt"
         }
     }
-    testLibs(projects.mixinTestData)
 
     // For non-SNAPSHOT versions (unless Jetbrains fixes this...) find the version with:
     // afterEvaluate { println(intellijPlatform.productInfo.buildNumber) }
@@ -184,6 +157,11 @@ tasks.withType<GroovyCompile>().configureEach {
 }
 
 tasks.processResources {
+    for (lang in arrayOf("", "_en")) {
+        from("src/main/resources/messages.MinecraftDevelopment_en_US.properties") {
+            rename { "messages.MinecraftDevelopment$lang.properties" }
+        }
+    }
     // These templates aren't allowed to be in a directory structure in the output jar
     // But we have a lot of templates that would get real hard to deal with if we didn't have some structure
     // So this just flattens out the fileTemplates/j2ee directory in the jar, while still letting us have directories
@@ -217,7 +195,6 @@ idea {
 license {
     val endings = listOf("java", "kt", "kts", "groovy", "gradle.kts", "xml", "properties", "html", "flex", "bnf")
     exclude("META-INF/plugin.xml") // https://youtrack.jetbrains.com/issue/IDEA-345026
-    exclude("sentry-debug-meta.properties", "sentry-external-modules.txt")
     include(endings.map { "**/*.$it" })
 
     val projectDir = layout.projectDirectory.asFile
@@ -244,37 +221,17 @@ license {
                 },
             )
         }
-        register("mixinTestData") {
-            files.from(
-                project.fileTree(project.projectDir.resolve("mixin-test-data")) {
-                    include("**/*.java", "**/*.kts")
-                    exclude("**/build/**")
-                },
-            )
-        }
         register("grammars") {
             files.from(project.fileTree("src/main/grammars"))
         }
-        register("externalAnnotations") {
-            files.from(project.fileTree("externalAnnotations"))
-        }
     }
 }
-
-val generateAtLexer by lexer("AtLexer", "com/demonwav/mcdev/platform/mcp/at/gen")
-val generateAtParser by parser("AtParser", "com/demonwav/mcdev/platform/mcp/at/gen")
-
-val generateCtLexer by lexer("CtLexer", "com/demonwav/mcdev/platform/mcp/ct/gen")
-val generateCtParser by parser("CtParser", "com/demonwav/mcdev/platform/mcp/ct/gen")
 
 val generateNbttLexer by lexer("NbttLexer", "com/demonwav/mcdev/nbt/lang/gen")
 val generateNbttParser by parser("NbttParser", "com/demonwav/mcdev/nbt/lang/gen")
 
 val generateLangLexer by lexer("LangLexer", "com/demonwav/mcdev/translations/lang/gen")
 val generateLangParser by parser("LangParser", "com/demonwav/mcdev/translations/lang/gen")
-
-val generateMEExpressionLexer by lexer("MEExpressionLexer", "com/demonwav/mcdev/platform/mixin/expression/gen")
-val generateMEExpressionParser by parser("MEExpressionParser", "com/demonwav/mcdev/platform/mixin/expression/gen")
 
 val generateTranslationTemplateLexer by lexer(
     "TranslationTemplateLexer",
@@ -286,16 +243,10 @@ val generate by tasks.registering {
     description = "Generates sources needed to compile the plugin."
     outputs.dir(layout.buildDirectory.dir("gen"))
     dependsOn(
-        generateAtLexer,
-        generateAtParser,
-        generateCtLexer,
-        generateCtParser,
         generateNbttLexer,
         generateNbttParser,
         generateLangLexer,
         generateLangParser,
-        generateMEExpressionLexer,
-        generateMEExpressionParser,
         generateTranslationTemplateLexer,
     )
 }
@@ -308,9 +259,6 @@ tasks.clean { delete(generate) }
 tasks.withType<PrepareSandboxTask> {
     pluginJar.set(tasks.jar.get().archiveFile)
     val pluginDirName = intellijPlatform.projectName.get()
-    from(externalAnnotationsJar) {
-        into("$pluginDirName/lib/resources")
-    }
     from("templates") {
         exclude(".git")
         into("$pluginDirName/lib/resources/builtin-templates")
@@ -333,30 +281,4 @@ tasks.runIde {
     // Set these properties to test different languages
     // systemProperty("user.language", "fr")
     // systemProperty("user.country", "FR")
-}
-
-if (System.getenv("CI") == "true" && System.getenv("NO_SENTRY") != "true") {
-    configure<SentryPluginExtension> {
-        includeSourceContext = true
-        includeDependenciesReport = true
-        autoInstallation {
-            enabled = false
-        }
-
-        url = "https://sentry.mcdev.io/"
-        org = "mcdev"
-        projectName = "mcdev"
-        authToken = providers.gradleProperty("mcdev.sentry.token")
-    }
-
-    // Wire together some tasks to make Gradle happy
-    tasks.named("generateSentryBundleIdJava") {
-        dependsOn(generate)
-    }
-    tasks.named("sentryCollectSourcesJava") {
-        dependsOn(generate)
-    }
-    tasks.checkLicenseMain {
-        dependsOn(tasks.named("generateSentryDebugMetaPropertiesjava"), tasks.named("collectExternalDependenciesForSentry"))
-    }
 }

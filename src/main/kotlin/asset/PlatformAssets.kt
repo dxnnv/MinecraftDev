@@ -37,35 +37,8 @@ object PlatformAssets : Assets() {
     val PAPER_ICON = loadIcon("/assets/icons/platform/Paper.png")
     val PAPER_ICON_2X = loadIcon("/assets/icons/platform/Paper@2x.png")
 
-    val FORGE_ICON = loadIcon("/assets/icons/platform/Forge.png")
-    val FORGE_ICON_2X = loadIcon("/assets/icons/platform/Forge@2x.png")
-
-    val FABRIC_ICON = loadIcon("/assets/icons/platform/Fabric.png")
-    val FABRIC_ICON_2X = loadIcon("/assets/icons/platform/Fabric@2x.png")
-
-    val ARCHITECTURY_ICON = loadIcon("/assets/icons/platform/Architectury.png")
-    val ARCHITECTURY_ICON_2X = loadIcon("/assets/icons/platform/Architectury@2x.png")
-
-    val SPONGE_ICON = loadIcon("/assets/icons/platform/Sponge.png")
-    val SPONGE_ICON_2X = loadIcon("/assets/icons/platform/Sponge@2x.png")
-    val SPONGE_ICON_DARK = loadIcon("/assets/icons/platform/Sponge_dark.png")
-    val SPONGE_ICON_2X_DARK = loadIcon("/assets/icons/platform/Sponge@2x_dark.png")
-
-    val BUNGEECORD_ICON = loadIcon("/assets/icons/platform/BungeeCord.png")
-    val BUNGEECORD_ICON_2X = loadIcon("/assets/icons/platform/BungeeCord@2x.png")
-    val WATERFALL_ICON = loadIcon("/assets/icons/platform/Waterfall.png")
-    val WATERFALL_ICON_2X = loadIcon("/assets/icons/platform/Waterfall@2x.png")
-
     val VELOCITY_ICON = loadIcon("/assets/icons/platform/Velocity.png")
     val VELOCITY_ICON_2X = loadIcon("/assets/icons/platform/Velocity@2x.png")
-
-    val MIXIN_ICON = loadIcon("/assets/icons/platform/Mixins.png")
-    val MIXIN_ICON_2X = loadIcon("/assets/icons/platform/Mixins@2x.png")
-    val MIXIN_ICON_DARK = loadIcon("/assets/icons/platform/Mixins_dark.png")
-    val MIXIN_ICON_2X_DARK = loadIcon("/assets/icons/platform/Mixins@2x_dark.png")
-
-    val NEOFORGE_ICON = IconUtil.scale(loadIcon("/assets/icons/platform/NeoForge.png"), null, 0.125f)
-    val NEOFORGE_ICON_2X = IconUtil.scale(loadIcon("/assets/icons/platform/NeoForge.png"), null, 0.25f)
 
     val MCP_ICON = loadIcon("/assets/icons/platform/MCP.png")
     val MCP_ICON_2X = loadIcon("/assets/icons/platform/MCP@2x.png")

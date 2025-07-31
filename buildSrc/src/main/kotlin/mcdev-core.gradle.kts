@@ -41,10 +41,7 @@ version = "$ideaVersionName-$coreVersion"
 
 // Build numbers are used for nightlies
 if (buildNumber != null) {
-    version = "$version-nightly+$buildNumber"
-}
-if (System.getenv("CI") != "true") {
-    version = "$version-local"
+    version = "$version-$buildNumber"
 }
 
 java {
@@ -78,18 +75,6 @@ tasks.withType<CompileUsingKotlinDaemon>().configureEach {
 repositories {
     intellijPlatform {
         defaultRepositories()
-    }
-
-    maven("https://maven.fabricmc.net/") {
-        content {
-            includeModule("net.fabricmc", "mapping-io")
-            includeModule("net.fabricmc", "fabric-loader")
-        }
-    }
-    maven("https://repo.spongepowered.org/maven/") {
-        content {
-            includeGroup("org.spongepowered")
-        }
     }
     maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/") {
         content {
