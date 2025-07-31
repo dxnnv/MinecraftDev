@@ -1,0 +1,73 @@
+plugins {
+    kotlin("jvm") version "${KOTLIN_VERSION}"
+    id("com.gradleup.shadow") version "8.3.5"
+    id("xyz.jpenilla.run-paper") version "2.3.1"
+    #if ($USE_PAPERWEIGHT)
+    id("io.papermc.paperweight.userdev") version "2.0.0-beta.17"
+    #end
+}
+
+group = "${BUILD_COORDS.groupId}"
+version = "${BUILD_COORDS.version}"
+description = "${DESCRIPTION}"
+var jarName = "${project.name}-${version}.jar"
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    #if ($IS_SPIGOT)
+    maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/") {
+        name = "spigotmc-repo"
+    }
+    #elseif ($IS_PAPER)
+    maven("https://repo.papermc.io/repository/maven-public/") {
+        name = "papermc-repo"
+    }
+    #end
+}
+
+dependencies {
+    #if ($USE_PAPERWEIGHT)
+    paperweight.paperDevBundle "1.21.4-R0.1-SNAPSHOT"
+    #elseif ($USE_SPIGOT)
+    compileOnly "org.spigotmc:spigot-api:${MC_VERSION}-R0.1-SNAPSHOT"
+    #elseif ($USE_PAPER)
+    compileOnly "io.papermc.paper:paper-api:${MC_VERSION}-R0.1-SNAPSHOT"
+    #end
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+}
+
+tasks.runServer {
+    minecraftVersion("${API_VERSION}")
+}
+
+val targetJavaVersion = ${JAVA_VERSION}
+kotlin.jvmToolchain(targetJavaVersion)
+
+#if ($USE_PAPER_MANIFEST)
+#set($MANIFEST_NAME = "paper-plugin.yml")
+#else
+#set($MANIFEST_NAME = "plugin.yml")
+#end
+tasks.processResources {
+    val props = mapOf("version" to version)
+    inputs.properties(props)
+    filteringCharset = "UTF-8"
+    filesMatching("${MANIFEST_NAME}") {
+        expand(props)
+    }
+}
+
+tasks.shadowJar {
+    delete("$projectDir/jars/$jarName")
+    archiveFileName.set(jarName)
+
+    exclude("org/intellij/lang/annotations/**")
+    exclude("org/jetbrains/annotations/**")
+
+    destinationDirectory.set(file("jars"))
+}
+
+tasks.build {
+    dependsOn(tasks.shadowJar)
+}

@@ -1,0 +1,269 @@
+{
+  "version": 1,
+  "group": "plugin",
+  "properties": [
+    {
+      "name": "PRESET",
+      "label": "Preset",
+      "type": "string",
+      "order": 5,
+      "options": [
+        "Self",
+        "Org",
+        "Custom"
+      ],
+      "default": "Self"
+    },
+    {
+      "name": "COORD_VERSION",
+      "label": "Version",
+      "type": "semantic_version",
+      "default": "1.0.0",
+      "order": 15,
+      "visible": true
+    },
+    {
+      "name": "BUILD_COORDS",
+      "type": "build_system_coordinates",
+      "order": 20,
+      "visible": {
+        "dependsOn": ["PRESET"],
+        "condition": "$PRESET == 'Custom'"
+      }
+    },
+    {
+      "name": "LANGUAGE",
+      "type": "string",
+      "options": [
+        "Java",
+        "Kotlin"
+      ]
+    },
+    {
+      "name": "MC_VERSION",
+      "type": "semantic_version",
+      "forceDropdown": true,
+      "options": [
+        "1.21.8",
+        "1.21.7",
+        "1.21.6",
+        "1.21.5",
+        "1.21.4",
+        "1.21.3",
+        "1.21.1",
+        "1.21",
+        "1.20.6",
+        "1.20.4",
+        "1.20.3",
+        "1.20.2",
+        "1.20.1",
+        "1.19.4",
+        "1.18.2"
+      ],
+      "default": 0
+    },
+    {
+      "name": "KOTLIN_VERSION",
+      "type": "maven_artifact_version",
+      "parameters": {
+        "sourceUrl": "https://repo1.maven.org/maven2/org/jetbrains/kotlin/kotlin-stdlib-jdk8/maven-metadata.xml"
+      },
+      "visible": {
+        "dependsOn": ["LANGUAGE"],
+        "condition": "$LANGUAGE == 'Kotlin'"
+      }
+    },
+    {
+      "name": "API_VERSION",
+      "type": "semantic_version",
+      "options": [
+        "1.21",
+        "1.20",
+        "1.19",
+        "1.18",
+        "1.17"
+      ],
+      "visible": false,
+      "derives": {
+        "parents": ["MC_VERSION"],
+        "method": "extractVersionMajorMinor"
+      }
+    },
+    {
+      "name": "PLUGIN_NAME",
+      "type": "string",
+      "visible": false,
+      "inheritFrom": "PROJECT_NAME"
+    },
+    {
+      "name": "MAIN_CLASS",
+      "type": "class_fqn",
+      "derives": {
+        "parents": ["BUILD_COORDS", "PLUGIN_NAME"],
+        "method": "suggestClassName"
+      }
+    },
+    {
+      "name": "USE_PAPER_MANIFEST",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "name": "USE_PAPERWEIGHT",
+      "type": "boolean",
+      "default": false,
+      "warning": null
+    },
+    {
+      "label": "creator.ui.optional_settings.label",
+      "collapsible": true,
+      "groupProperties": [
+        {
+          "name": "DESCRIPTION",
+          "type": "string",
+          "default": "",
+          "remember": false,
+          "nullIfDefault": true
+        },
+        {
+          "name": "AUTHORS",
+          "type": "inline_string_list",
+          "default": "dxnnv",
+          "nullIfDefault": false
+        },
+        {
+          "name": "WEBSITE",
+          "type": "string",
+          "default": "",
+          "nullIfDefault": true,
+          "visible": {
+            "dependsOn": ["PRESET"],
+            "condition": "$PRESET == 'Custom'"
+          },
+          "derives": {
+            "parents": ["PRESET"],
+            "select": [
+              {
+                "condition": "$PRESET == 'Self'",
+                "value": "https://dxnny.dev"
+              },
+              {
+                "condition": "$PRESET == 'Org'",
+                "value": "https://flamefrags.com"
+              }
+            ]
+          }
+        },
+        {
+          "name": "LOG_PREFIX",
+          "type": "string",
+          "default": "",
+          "nullIfDefault": true,
+          "visible": false
+        },
+        {
+          "name": "LOAD_AT",
+          "type": "string",
+          "options": [
+            "STARTUP",
+            "POSTWORLD"
+          ],
+          "default": "POSTWORLD",
+          "nullIfDefault": true
+        }
+      ]
+    },
+    {
+      "name": "JAVA_VERSION",
+      "type": "integer",
+      "order": 20,
+      "default": 21,
+      "limit": 99,
+      "visible": false,
+      "derives": {
+        "parents": ["MC_VERSION"],
+        "method": "recommendJavaVersionForMcVersion",
+        "default": 21
+      }
+    },
+    {
+      "name": "JDK",
+      "type": "jdk",
+      "order": 20,
+      "default": "JAVA_VERSION",
+      "visible": false
+    },
+    {
+      "name": "IS_PAPER",
+      "type": "boolean",
+      "visible": false,
+      "default": true
+    }
+  ],
+  "files": [
+    {
+      "template": "../gitignore.ft",
+      "destination": ".gitignore",
+      "condition": "$USE_GIT"
+    },
+    {
+      "template": "build.gradle.ft",
+      "destination": "build.gradle",
+      "condition": "$LANGUAGE=='Java'"
+    },
+    {
+      "template": "settings.gradle.ft",
+      "destination": "settings.gradle",
+      "condition": "$LANGUAGE=='Java'"
+    },
+    {
+      "template": "build.gradle.kts.ft",
+      "destination": "build.gradle.kts",
+      "condition": "$LANGUAGE=='Kotlin'"
+    },
+    {
+      "template": "settings.gradle.kts.ft",
+      "destination": "settings.gradle.kts",
+      "condition": "$LANGUAGE=='Kotlin'"
+    },
+    {
+      "template": "../gradle-wrapper.properties.ft",
+      "destination": "gradle/wrapper/gradle-wrapper.properties"
+    },
+    {
+      "template": "plugin.yml.ft",
+      "destination": "src/main/resources/plugin.yml",
+      "condition": "!$USE_PAPER_MANIFEST"
+    },
+    {
+      "template": "paper-plugin.yml.ft",
+      "destination": "src/main/resources/paper-plugin.yml",
+      "condition": "$USE_PAPER_MANIFEST"
+    },
+    {
+      "template": "MainClass.java.ft",
+      "destination": "src/main/java/${MAIN_CLASS.path}.java",
+      "condition": "$LANGUAGE=='Java'",
+      "openInEditor": true
+    },
+    {
+      "template": "MainClass.kt.ft",
+      "destination": "src/main/kotlin/${MAIN_CLASS.path}.kt",
+      "condition": "$LANGUAGE=='Kotlin'",
+      "openInEditor": true
+    }
+  ],
+  "finalizers": [
+    {
+      "type": "import_gradle_project"
+    },
+    {
+      "type": "run_gradle_tasks",
+      "tasks": ["wrapper"]
+    },
+    {
+      "type": "git_add_all",
+      "condition": "$USE_GIT"
+    }
+  ]
+}

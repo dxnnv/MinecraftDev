@@ -1,19 +1,11 @@
 {
   "version": 1,
-  "group": "proxy",
+  "group": "plugin",
   "properties": [
     {
       "name": "BUILD_COORDS",
       "type": "build_system_coordinates",
       "order": 10
-    },
-    {
-      "name": "BUILD_SYSTEM",
-      "type": "string",
-      "options": [
-        "Gradle",
-        "Maven"
-      ]
     },
     {
       "name": "LANGUAGE",
@@ -24,24 +16,26 @@
       ]
     },
     {
-      "name": "BUNGEE_VERSION",
+      "name": "MC_VERSION",
       "type": "semantic_version",
       "forceDropdown": true,
       "options": [
-        "1.21-R0.1-SNAPSHOT",
-        "1.20-R0.1-SNAPSHOT",
-        "1.19-R0.1-SNAPSHOT",
-        "1.18-R0.1-SNAPSHOT",
-        "1.17-R0.1-SNAPSHOT",
-        "1.16-R0.5-SNAPSHOT",
-        "1.16-R0.4",
-        "1.16-R0.3",
-        "1.16-R0.2",
-        "1.16-R0.1",
-        "1.15-SNAPSHOT",
-        "1.14-SNAPSHOT",
-        "1.13-SNAPSHOT",
-        "1.12-SNAPSHOT"
+        "1.21.8",
+        "1.21.7",
+        "1.21.6",
+        "1.21.5",
+        "1.21.4",
+        "1.21.3",
+        "1.21.2",
+        "1.21.1",
+        "1.21",
+        "1.20.6",
+        "1.20.4",
+        "1.20.3",
+        "1.20.2",
+        "1.20.1",
+        "1.19.4",
+        "1.18.2"
       ],
       "default": 0
     },
@@ -54,6 +48,22 @@
       "visible": {
         "dependsOn": ["LANGUAGE"],
         "condition": "$LANGUAGE == 'Kotlin'"
+      }
+    },
+    {
+      "name": "API_VERSION",
+      "type": "semantic_version",
+      "options": [
+        "1.21",
+        "1.20",
+        "1.19",
+        "1.18",
+        "1.17"
+      ],
+      "visible": false,
+      "derives": {
+        "parents": ["MC_VERSION"],
+        "method": "extractVersionMajorMinor"
       }
     },
     {
@@ -90,6 +100,22 @@
           "type": "string",
           "default": "",
           "nullIfDefault": true
+        },
+        {
+          "name": "LOG_PREFIX",
+          "type": "string",
+          "default": "",
+          "nullIfDefault": true
+        },
+        {
+          "name": "LOAD_AT",
+          "type": "string",
+          "options": [
+            "STARTUP",
+            "POSTWORLD"
+          ],
+          "default": "POSTWORLD",
+          "nullIfDefault": true
         }
       ]
     },
@@ -97,60 +123,60 @@
       "name": "JAVA_VERSION",
       "type": "integer",
       "order": 20,
-      "default": 8,
-      "visible": false
+      "default": 21,
+      "visible": true,
+      "derives": {
+        "parents": ["MC_VERSION"],
+        "method": "recommendJavaVersionForMcVersion",
+        "default": 17
+      }
     },
     {
       "name": "JDK",
       "type": "jdk",
       "order": 20,
       "default": "JAVA_VERSION"
+    },
+    {
+      "name": "IS_SPIGOT",
+      "type": "boolean",
+      "visible": false,
+      "default": true
     }
   ],
   "files": [
     {
-      "template": "../${BUILD_SYSTEM}.gitignore.ft",
+      "template": "../gitignore.ft",
       "destination": ".gitignore",
       "condition": "$USE_GIT"
     },
     {
       "template": "build.gradle.ft",
       "destination": "build.gradle",
-      "condition": "$BUILD_SYSTEM=='Gradle' && $LANGUAGE=='Java'"
+      "condition": "$LANGUAGE=='Java'"
     },
     {
       "template": "settings.gradle.ft",
       "destination": "settings.gradle",
-      "condition": "$BUILD_SYSTEM=='Gradle' && $LANGUAGE=='Java'"
+      "condition": "$LANGUAGE=='Java'"
     },
     {
       "template": "build.gradle.kts.ft",
       "destination": "build.gradle.kts",
-      "condition": "$BUILD_SYSTEM=='Gradle' && $LANGUAGE=='Kotlin'"
+      "condition": "$LANGUAGE=='Kotlin'"
     },
     {
       "template": "settings.gradle.kts.ft",
       "destination": "settings.gradle.kts",
-      "condition": "$BUILD_SYSTEM=='Gradle' && $LANGUAGE=='Kotlin'"
-    },
-    {
-      "template": "gradle.properties.ft",
-      "destination": "gradle.properties",
-      "condition": "$BUILD_SYSTEM=='Gradle'"
+      "condition": "$LANGUAGE=='Kotlin'"
     },
     {
       "template": "../gradle-wrapper.properties.ft",
-      "destination": "gradle/wrapper/gradle-wrapper.properties",
-      "condition": "$BUILD_SYSTEM=='Gradle'"
+      "destination": "gradle/wrapper/gradle-wrapper.properties"
     },
     {
-      "template": "pom.xml.ft",
-      "destination": "pom.xml",
-      "condition": "$BUILD_SYSTEM=='Maven'"
-    },
-    {
-      "template": "bungee.yml.ft",
-      "destination": "src/main/resources/bungee.yml"
+      "template": "plugin.yml.ft",
+      "destination": "src/main/resources/plugin.yml"
     },
     {
       "template": "MainClass.java.ft",
@@ -167,17 +193,11 @@
   ],
   "finalizers": [
     {
-      "type": "import_maven_project",
-      "condition": "$BUILD_SYSTEM=='Maven'"
-    },
-    {
-      "type": "import_gradle_project",
-      "condition": "$BUILD_SYSTEM=='Gradle'"
+      "type": "import_gradle_project"
     },
     {
       "type": "run_gradle_tasks",
-      "tasks": ["wrapper"],
-      "condition": "$BUILD_SYSTEM=='Gradle'"
+      "tasks": ["wrapper"]
     },
     {
       "type": "git_add_all",
