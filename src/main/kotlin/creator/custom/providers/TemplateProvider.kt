@@ -48,6 +48,7 @@ import java.util.ResourceBundle
 import javax.swing.JComponent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 
 /**
  * Extensions responsible for creating a [TemplateDescriptor] based on whatever data it is provided in its configuration
@@ -73,7 +74,7 @@ interface TemplateProvider {
 
         fun get(key: String): TemplateProvider? = COLLECTOR.findSingle(key)
 
-        fun getAllKeys() = EP_NAME.extensionList.mapNotNull { it.key }
+        fun getAllKeys() = EP_NAME.extensionList.map { it.key }
 
         suspend fun findTemplates(
             modalityState: ModalityState,
@@ -85,9 +86,8 @@ interface TemplateProvider {
             val templatesToLoad = mutableListOf<VirtualFile>()
             val visitor = object : VirtualFileVisitor<Unit>() {
                 override fun visitFile(file: VirtualFile): Boolean {
-                    if (!file.isFile || !file.name.endsWith(".mcdev.template.json")) {
+                    if (!file.isFile || !file.name.endsWith(".mcdev.template.json"))
                         return true
-                    }
 
                     templatesToLoad += file
 
@@ -101,9 +101,8 @@ interface TemplateProvider {
                     createVfsLoadedTemplate(modalityState, file.parent, file, bundle = bundle)
                         ?.let(templates::add)
                 } catch (t: Throwable) {
-                    if (t is ControlFlowException) {
-                        throw t
-                    }
+                        if (t is ControlFlowException)
+                            throw t
 
                     val attachment = runCatching { Attachment(file.name, file.readText()) }.getOrNull()
                     if (attachment != null) {
@@ -174,16 +173,13 @@ interface TemplateProvider {
             tooltip: String? = null,
             bundle: ResourceBundle? = null
         ): VfsLoadedTemplate? {
-            descriptorFile.refreshSync(modalityState)
             var descriptor = Gson().fromJson<TemplateDescriptor>(descriptorFile.readText())
             if (descriptor.version != TemplateDescriptor.FORMAT_VERSION) {
                 thisLogger().warn("Cannot handle template ${descriptorFile.path} of version ${descriptor.version}")
                 return null
             }
 
-            if (descriptor.hidden == true) {
-                return null
-            }
+            if (descriptor.hidden == true) return null
 
             descriptor.bundle = bundle
 
@@ -194,7 +190,7 @@ interface TemplateProvider {
                 descriptor.translateOrNull("platform.${labelKey.lowercase()}.label") ?: descriptor.translate(labelKey)
 
             if (descriptor.inherit != null) {
-                val parent = templateRoot.findFileByRelativePath(descriptor.inherit!!)
+                val parent = templateRoot.findFileByRelativePath(descriptor.inherit)
                 if (parent != null) {
                     parent.refresh(false, false)
                     val parentDescriptor = Gson().fromJson<TemplateDescriptor>(parent.readText())
