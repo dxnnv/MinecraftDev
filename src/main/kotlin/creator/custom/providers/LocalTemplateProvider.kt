@@ -23,12 +23,14 @@ package com.demonwav.mcdev.creator.custom.providers
 import com.demonwav.mcdev.MinecraftSettings
 import com.demonwav.mcdev.asset.MCDevBundle
 import com.demonwav.mcdev.creator.modalityState
-import com.demonwav.mcdev.util.refreshSync
 import com.demonwav.mcdev.util.virtualFile
 import com.intellij.ide.util.projectWizard.WizardContext
+import com.intellij.openapi.application.EDT
+import com.intellij.openapi.application.asContextElement
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
 import com.intellij.openapi.observable.properties.PropertyGraph
 import com.intellij.openapi.ui.validation.validationErrorIf
+import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.ui.dsl.builder.AlignX
 import com.intellij.ui.dsl.builder.COLUMNS_LARGE
@@ -37,8 +39,11 @@ import com.intellij.ui.dsl.builder.columns
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.builder.textValidation
 import java.nio.file.Path
+import java.util.Collections.emptyList
 import javax.swing.JComponent
 import kotlin.io.path.absolute
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class LocalTemplateProvider : TemplateProvider {
 
@@ -50,12 +55,18 @@ class LocalTemplateProvider : TemplateProvider {
         context: WizardContext,
         repo: MinecraftSettings.TemplateRepo
     ): Collection<LoadedTemplate> {
-        val rootPath = Path.of(repo.data.trim()).absolute()
-        val repoRoot = rootPath.virtualFile
-            ?: return emptyList()
-        val modalityState = context.modalityState
-        repoRoot.refreshSync(modalityState)
-        return TemplateProvider.findTemplates(modalityState, repoRoot)
+        val repoRoot = withContext(Dispatchers.IO) {
+            val rootPath = Path.of(repo.data.trim()).absolute()
+            rootPath.virtualFile
+        } ?: return emptyList()
+
+        withContext(Dispatchers.EDT) {
+            VfsUtil.markDirtyAndRefresh(false, repoRoot.isDirectory, true, repoRoot)
+        }
+
+        return withContext(Dispatchers.IO) {
+            TemplateProvider.findTemplatesOffEdt(context.modalityState, repoRoot)
+        }
     }
 
     override fun setupConfigUi(
@@ -66,26 +77,23 @@ class LocalTemplateProvider : TemplateProvider {
         val pathProperty = propertyGraph.property(data)
         return panel {
             row(MCDevBundle("creator.ui.custom.path.label")) {
-                val descriptor = FileChooserDescriptorFactory
-                    .createSingleFolderDescriptor()
-                    .withTitle(MCDevBundle("creator.ui.custom.path.dialog.title"))
-                    .apply {
-                        description = MCDevBundle("creator.ui.custom.path.dialog.description")
-                    }
-
-                textFieldWithBrowseButton(descriptor.title, project = null) { file -> file.toNioPath().toString() }
+                val pathChooserDescriptor = FileChooserDescriptorFactory.createSingleFolderDescriptor().apply {
+                    title = MCDevBundle("creator.ui.custom.path.dialog.title")
+                    description = MCDevBundle("creator.ui.custom.path.dialog.description")
+                }
+                textFieldWithBrowseButton(pathChooserDescriptor)
                     .align(AlignX.FILL)
                     .columns(COLUMNS_LARGE)
                     .bindText(pathProperty)
                     .textValidation(
                         validationErrorIf(MCDevBundle("creator.validation.custom.path_not_a_directory")) { value ->
-                            kotlin.runCatching {
+                            val file = kotlin.runCatching {
                                 VirtualFileManager.getInstance().findFileByNioPath(Path.of(value))
-                            }.getOrNull()?.isDirectory != true
+                            }.getOrNull()
+                            file == null || !file.isDirectory
                         }
                     )
             }
-
             onApply {
                 dataSetter(pathProperty.get())
             }

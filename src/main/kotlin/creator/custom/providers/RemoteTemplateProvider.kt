@@ -36,7 +36,6 @@ import com.github.kittinunf.result.getOrNull
 import com.github.kittinunf.result.onError
 import com.intellij.ide.util.projectWizard.WizardContext
 import com.intellij.openapi.application.PathManager
-import com.intellij.openapi.application.writeAction
 import com.intellij.openapi.diagnostic.ControlFlowException
 import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.observable.properties.PropertyGraph
@@ -47,6 +46,7 @@ import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.util.NlsContexts
 import com.intellij.openapi.vfs.JarFileSystem
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.ui.CollectionComboBoxModel
 import com.intellij.ui.EnumComboBoxModel
 import com.intellij.ui.MutableCollectionComboBoxModel
@@ -68,6 +68,8 @@ import javax.swing.ListCellRenderer
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.exists
 import kotlin.io.path.writeBytes
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 open class RemoteTemplateProvider : TemplateProvider {
 
@@ -139,42 +141,57 @@ open class RemoteTemplateProvider : TemplateProvider {
     override suspend fun loadTemplates(
         context: WizardContext,
         repo: MinecraftSettings.TemplateRepo
-    ): Collection<LoadedTemplate> {
+    ): Collection<LoadedTemplate> = withContext(Dispatchers.IO) {
         val remoteRepo = RemoteTemplateRepo.deserialize(repo.data)
-            ?: return emptyList()
-        return doLoadTemplates(context, repo, remoteRepo.innerPath)
+        val rootFile = getRootFile(repo)
+
+        if (remoteRepo == null || rootFile == null)
+            return@withContext emptyList()
+
+        rootFile.refreshSync()
+
+        val innerPath = remoteRepo.innerPath
+        val repoRoot = if (innerPath.isNotBlank()) {
+            rootFile.findFileByRelativePath(innerPath)
+        } else {
+            rootFile
+        } ?: return@withContext emptyList()
+
+        TemplateProvider.findTemplatesOffEdt(context.modalityState, repoRoot)
+    }
+
+    private fun getRootFile(repo: MinecraftSettings.TemplateRepo): VirtualFile? {
+        val zipPath = RemoteTemplateRepo.getDestinationZip(repo.name)
+        if (!zipPath.exists())
+            return null
+
+        val archiveRoot = zipPath.absolutePathString() + JarFileSystem.JAR_SEPARATOR
+        val fs = JarFileSystem.getInstance()
+        return fs.refreshAndFindFileByPath(archiveRoot)
     }
 
     protected suspend fun doLoadTemplates(
         context: WizardContext,
         repo: MinecraftSettings.TemplateRepo,
         rawInnerPath: String
-    ): List<LoadedTemplate> {
+    ): List<LoadedTemplate> = withContext(Dispatchers.IO) {
         val remoteRootPath = RemoteTemplateRepo.getDestinationZip(repo.name)
-        if (!remoteRootPath.exists()) {
-            return emptyList()
-        }
+        if (!remoteRootPath.exists())
+            return@withContext emptyList()
 
         val archiveRoot = remoteRootPath.absolutePathString() + JarFileSystem.JAR_SEPARATOR
 
         val fs = JarFileSystem.getInstance()
         val rootFile = fs.refreshAndFindFileByPath(archiveRoot)
-            ?: return emptyList()
-        val modalityState = context.modalityState
-        writeAction { rootFile.refreshSync(modalityState) }
+            ?: return@withContext emptyList()
+        rootFile.refreshSync()
 
         val innerPath = replaceVariables(rawInnerPath)
-        val repoRoot = if (innerPath.isNotBlank()) {
-            rootFile.findFileByRelativePath(innerPath)
-        } else {
-            rootFile
-        }
+        val repoRoot = if (innerPath.isNotBlank()) rootFile.findFileByRelativePath(innerPath) else rootFile
+        if (repoRoot == null)
+            return@withContext emptyList()
 
-        if (repoRoot == null) {
-            return emptyList()
-        }
-
-        return TemplateProvider.findTemplates(modalityState, repoRoot)
+        TemplateProvider.findTemplatesOffEdt(context.modalityState, repoRoot)
     }
 
     private fun replaceVariables(originalRepoUrl: String): String =
@@ -400,14 +417,11 @@ open class RemoteTemplateProvider : TemplateProvider {
             val templatesBaseDir: Path
                 get() = PathManager.getSystemDir().resolve("mcdev-templates")
 
-            fun getDestinationZip(repoName: String): Path {
-                return templatesBaseDir.resolve("$repoName.zip")
-            }
+            fun getDestinationZip(repoName: String): Path = templatesBaseDir.resolve("$repoName.zip")
 
             fun deserialize(data: String): RemoteTemplateRepo? {
-                if (data.isBlank()) {
+                if (data.isBlank())
                     return null
-                }
 
                 val lines = data.lines()
                 return RemoteTemplateRepo(

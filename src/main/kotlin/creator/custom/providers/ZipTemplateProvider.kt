@@ -38,6 +38,8 @@ import com.intellij.ui.dsl.builder.textValidation
 import java.nio.file.Path
 import javax.swing.JComponent
 import kotlin.io.path.isRegularFile
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class ZipTemplateProvider : TemplateProvider {
 
@@ -48,14 +50,14 @@ class ZipTemplateProvider : TemplateProvider {
     override suspend fun loadTemplates(
         context: WizardContext,
         repo: MinecraftSettings.TemplateRepo
-    ): Collection<LoadedTemplate> {
+    ): Collection<LoadedTemplate> = withContext(Dispatchers.IO) {
         val archiveRoot = repo.data + JarFileSystem.JAR_SEPARATOR
         val fs = JarFileSystem.getInstance()
         val rootFile = fs.refreshAndFindFileByPath(archiveRoot)
-            ?: return emptyList()
-        val modalityState = context.modalityState
-        rootFile.refreshSync(modalityState)
-        return TemplateProvider.findTemplates(modalityState, rootFile)
+            ?: return@withContext emptyList()
+        rootFile.refreshSync()
+
+        TemplateProvider.findTemplatesOffEdt(context.modalityState, rootFile)
     }
 
     override fun setupConfigUi(
@@ -67,23 +69,17 @@ class ZipTemplateProvider : TemplateProvider {
 
         return panel {
             row(MCDevBundle("creator.ui.custom.path.label")) {
-                val archiveChooser = FileChooserDescriptorFactory
-                    .createSingleLocalFileDescriptor()
-                    .withFileFilter { it.extension == "zip" }
+                val pathChooserDescriptor = FileChooserDescriptorFactory.singleFile()
                     .withTitle(MCDevBundle("creator.ui.custom.archive.dialog.title"))
-                    .apply {
-                        description = MCDevBundle("creator.ui.custom.archive.dialog.description")
-                    }
-
-                textFieldWithBrowseButton(archiveChooser.title, project = null) { file -> file.toNioPath().toString() }
+                    .withFileFilter { it.extension == "zip" }
+                    .apply { description = MCDevBundle("creator.ui.custom.archive.dialog.description") }
+                textFieldWithBrowseButton(pathChooserDescriptor)
                     .align(AlignX.FILL)
                     .columns(COLUMNS_LARGE)
                     .bindText(pathProperty)
                     .textValidation(
                         validationErrorIf(MCDevBundle("creator.validation.custom.path_not_a_file")) { value ->
-                            runCatching { Path.of(value).isRegularFile() }
-                                .getOrDefault(false)
-                                .not()
+                            runCatching { !Path.of(value).isRegularFile() }.getOrDefault(true)
                         }
                     )
             }

@@ -20,11 +20,11 @@
 
 package com.demonwav.mcdev.util
 
-import com.intellij.openapi.application.ModalityState
+import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.vfs.LocalFileSystem
+import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VfsUtilCore
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.openapi.vfs.newvfs.RefreshQueue
 import java.io.File
 import java.io.IOException
 import java.nio.file.Path
@@ -44,7 +44,7 @@ val Path.virtualFileOrError: VirtualFile
 val VirtualFile.manifest: Manifest?
     get() = try {
         JarFile(localFile).use { it.manifest }
-    } catch (e: IOException) {
+    } catch (_: IOException) {
         null
     }
 
@@ -77,7 +77,9 @@ val VirtualFile.mcDomainAndPath: Pair<String, String>?
 operator fun Manifest.get(attribute: String): String? = mainAttributes.getValue(attribute)
 operator fun Manifest.get(attribute: Attributes.Name): String? = mainAttributes.getValue(attribute)
 
-fun VirtualFile.refreshSync(modalityState: ModalityState): VirtualFile? {
-    RefreshQueue.getInstance().refresh(false, this.isDirectory, null, modalityState, this)
-    return this.parent?.findOrCreateChildData(this, this.name)
+fun VirtualFile.refreshSync(): VirtualFile {
+    WriteAction.run<RuntimeException> {
+        VfsUtil.markDirtyAndRefresh(false, this.isDirectory, true, this)
+    }
+    return this
 }
