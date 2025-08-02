@@ -23,6 +23,7 @@ package com.demonwav.mcdev.creator.custom.providers
 import com.demonwav.mcdev.MinecraftSettings
 import com.demonwav.mcdev.asset.MCDevBundle
 import com.demonwav.mcdev.creator.custom.TemplateDescriptor
+import com.demonwav.mcdev.creator.custom.providers.TemplateProvider.Companion.loadMessagesBundleOffEdt
 import com.demonwav.mcdev.creator.modalityState
 import com.demonwav.mcdev.update.PluginUtil
 import com.demonwav.mcdev.util.refreshSync
@@ -33,6 +34,8 @@ import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.ui.dsl.builder.bindSelected
 import com.intellij.ui.dsl.builder.panel
 import javax.swing.JComponent
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class BuiltinTemplateProvider : RemoteTemplateProvider() {
 
@@ -59,16 +62,16 @@ class BuiltinTemplateProvider : RemoteTemplateProvider() {
     override suspend fun loadTemplates(
         context: WizardContext,
         repo: MinecraftSettings.TemplateRepo
-    ): Collection<LoadedTemplate> {
+    ): Collection<LoadedTemplate> = withContext(Dispatchers.IO) {
         val remoteTemplates = doLoadTemplates(context, repo, builtinTemplatesInnerPath)
-        if (remoteTemplates.isNotEmpty()) {
-            return remoteTemplates
-        }
+        if (remoteTemplates.isNotEmpty())
+            return@withContext remoteTemplates
 
         val repoRoot = builtinTemplatesPath.virtualFile
-            ?: return emptyList()
-        repoRoot.refreshSync(context.modalityState)
-        return TemplateProvider.findTemplates(context.modalityState, repoRoot)
+            ?: return@withContext emptyList()
+        repoRoot.refreshSync()
+
+        TemplateProvider.findTemplatesOffEdt(context.modalityState, repoRoot)
     }
 
     override fun setupConfigUi(

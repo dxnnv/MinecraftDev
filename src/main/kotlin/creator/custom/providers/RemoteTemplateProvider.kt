@@ -399,14 +399,11 @@ open class RemoteTemplateProvider : TemplateProvider {
             val templatesBaseDir: Path
                 get() = PathManager.getSystemDir().resolve("mcdev-templates")
 
-            fun getDestinationZip(repoName: String): Path {
-                return templatesBaseDir.resolve("$repoName.zip")
-            }
+            fun getDestinationZip(repoName: String): Path = templatesBaseDir.resolve("$repoName.zip")
 
             fun deserialize(data: String): RemoteTemplateRepo? {
-                if (data.isBlank()) {
+                if (data.isBlank())
                     return null
-                }
 
                 val lines = data.lines()
                 return RemoteTemplateRepo(
