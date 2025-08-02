@@ -3,17 +3,29 @@
   "group": "plugin",
   "properties": [
     {
-      "name": "BUILD_COORDS",
-      "type": "build_system_coordinates",
-      "order": 10
+      "name": "PRESET",
+      "label": "Preset",
+      "type": "string",
+      "order": 5,
+      "options": [
+        "Self",
+        "Org",
+        "Custom"
+      ],
+      "default": "Self"
     },
     {
-      "name": "BUILD_SYSTEM",
-      "type": "string",
-      "options": [
-        "Gradle",
-        "Maven"
-      ]
+      "name": "COORD_VERSION",
+      "label": "Version",
+      "type": "semantic_version",
+      "default": "1.0.0",
+      "order": 15,
+      "visible": true
+    },
+    {
+      "name": "BUILD_COORDS",
+      "type": "build_system_coordinates",
+      "order": 20
     },
     {
       "name": "LANGUAGE",
@@ -28,6 +40,8 @@
       "type": "semantic_version",
       "forceDropdown": true,
       "options": [
+        "1.21.8",
+        "1.21.7",
         "1.21.6",
         "1.21.5",
         "1.21.4",
@@ -35,12 +49,7 @@
         "1.21.1",
         "1.21",
         "1.20.6",
-        "1.20.4",
-        "1.20.3",
-        "1.20.2",
-        "1.20.1",
-        "1.19.4",
-        "1.18.2"
+        "1.20.4"
       ],
       "default": 0
     },
@@ -74,20 +83,37 @@
     {
       "name": "PLUGIN_NAME",
       "type": "string",
+      "visible": false,
       "inheritFrom": "PROJECT_NAME"
     },
     {
       "name": "MAIN_CLASS",
       "type": "class_fqn",
+      "visible": {
+        "dependsOn": ["PRESET"],
+        "condition": "$PRESET == 'Custom'"
+      },
       "derives": {
         "parents": ["BUILD_COORDS", "PLUGIN_NAME"],
         "method": "suggestClassName"
       }
     },
     {
-      "name": "USE_PAPER_MANIFEST",
-      "type": "boolean",
-      "default": false
+      "label": "Paper Settings",
+      "collapsible": true,
+      "groupProperties": [
+        {
+          "name": "USE_PAPER_MANIFEST",
+          "type": "boolean",
+          "default": false
+        },
+        {
+          "name": "USE_PAPERWEIGHT",
+          "type": "boolean",
+          "default": false,
+          "warning": null
+        }
+      ]
     },
     {
       "label": "creator.ui.optional_settings.label",
@@ -97,25 +123,44 @@
           "name": "DESCRIPTION",
           "type": "string",
           "default": "",
+          "remember": false,
           "nullIfDefault": true
         },
         {
           "name": "AUTHORS",
           "type": "inline_string_list",
-          "default": "",
-          "nullIfDefault": true
+          "default": "dxnnv",
+          "nullIfDefault": false
         },
         {
           "name": "WEBSITE",
           "type": "string",
           "default": "",
-          "nullIfDefault": true
+          "nullIfDefault": true,
+          "visible": {
+            "dependsOn": ["PRESET"],
+            "condition": "$PRESET == 'Custom'"
+          },
+          "derives": {
+            "parents": ["PRESET"],
+            "select": [
+              {
+                "condition": "$PRESET == 'Self'",
+                "value": "https://dxnny.dev"
+              },
+              {
+                "condition": "$PRESET == 'Org'",
+                "value": "https://flamefrags.com"
+              }
+            ]
+          }
         },
         {
           "name": "LOG_PREFIX",
           "type": "string",
           "default": "",
-          "nullIfDefault": true
+          "nullIfDefault": true,
+          "visible": false
         },
         {
           "name": "LOAD_AT",
@@ -133,19 +178,21 @@
       "name": "JAVA_VERSION",
       "type": "integer",
       "order": 20,
-      "default": 17,
+      "default": 21,
+      "limit": 99,
       "visible": false,
       "derives": {
         "parents": ["MC_VERSION"],
         "method": "recommendJavaVersionForMcVersion",
-        "default": 17
+        "default": 21
       }
     },
     {
       "name": "JDK",
       "type": "jdk",
       "order": 20,
-      "default": "JAVA_VERSION"
+      "default": "JAVA_VERSION",
+      "visible": false
     },
     {
       "name": "IS_PAPER",
@@ -156,44 +203,33 @@
   ],
   "files": [
     {
-      "template": "../${BUILD_SYSTEM}.gitignore.ft",
+      "template": "../gitignore.ft",
       "destination": ".gitignore",
       "condition": "$USE_GIT"
     },
     {
       "template": "build.gradle.ft",
       "destination": "build.gradle",
-      "condition": "$BUILD_SYSTEM=='Gradle' && $LANGUAGE=='Java'"
+      "condition": "$LANGUAGE=='Java'"
     },
     {
       "template": "settings.gradle.ft",
       "destination": "settings.gradle",
-      "condition": "$BUILD_SYSTEM=='Gradle' && $LANGUAGE=='Java'"
+      "condition": "$LANGUAGE=='Java'"
     },
     {
       "template": "build.gradle.kts.ft",
       "destination": "build.gradle.kts",
-      "condition": "$BUILD_SYSTEM=='Gradle' && $LANGUAGE=='Kotlin'"
+      "condition": "$LANGUAGE=='Kotlin'"
     },
     {
       "template": "settings.gradle.kts.ft",
       "destination": "settings.gradle.kts",
-      "condition": "$BUILD_SYSTEM=='Gradle' && $LANGUAGE=='Kotlin'"
-    },
-    {
-      "template": "gradle.properties.ft",
-      "destination": "gradle.properties",
-      "condition": "$BUILD_SYSTEM=='Gradle'"
+      "condition": "$LANGUAGE=='Kotlin'"
     },
     {
       "template": "../gradle-wrapper.properties.ft",
-      "destination": "gradle/wrapper/gradle-wrapper.properties",
-      "condition": "$BUILD_SYSTEM=='Gradle'"
-    },
-    {
-      "template": "pom.xml.ft",
-      "destination": "pom.xml",
-      "condition": "$BUILD_SYSTEM=='Maven'"
+      "destination": "gradle/wrapper/gradle-wrapper.properties"
     },
     {
       "template": "plugin.yml.ft",
@@ -220,17 +256,11 @@
   ],
   "finalizers": [
     {
-      "type": "import_maven_project",
-      "condition": "$BUILD_SYSTEM=='Maven'"
-    },
-    {
-      "type": "import_gradle_project",
-      "condition": "$BUILD_SYSTEM=='Gradle'"
+      "type": "import_gradle_project"
     },
     {
       "type": "run_gradle_tasks",
-      "tasks": ["wrapper"],
-      "condition": "$BUILD_SYSTEM=='Gradle'"
+      "tasks": ["wrapper"]
     },
     {
       "type": "git_add_all",

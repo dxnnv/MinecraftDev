@@ -8,17 +8,17 @@ version = '${BUILD_COORDS.version}'
 
 repositories {
     mavenCentral()
-#if ($IS_SPIGOT)
-    maven {
-        name = "spigotmc-repo"
-        url = "https://hub.spigotmc.org/nexus/content/repositories/snapshots/"
-    }
-#elseif ($IS_PAPER)
-    maven {
-        name = "papermc-repo"
-        url = "https://repo.papermc.io/repository/maven-public/"
-    }
-#end
+    #if ($IS_SPIGOT)
+        maven {
+            name = "spigotmc-repo"
+            url = "https://hub.spigotmc.org/nexus/content/repositories/snapshots/"
+        }
+    #elseif ($IS_PAPER)
+        maven {
+            name = "papermc-repo"
+            url = "https://repo.papermc.io/repository/maven-public/"
+        }
+    #end
     maven {
         name = "sonatype"
         url = "https://oss.sonatype.org/content/groups/public/"
@@ -26,31 +26,28 @@ repositories {
 }
 
 dependencies {
-#if ($IS_SPIGOT)
-    compileOnly("org.spigotmc:spigot-api:${MC_VERSION}-R0.1-SNAPSHOT")
-#elseif ($IS_PAPER)
-    compileOnly("io.papermc.paper:paper-api:${MC_VERSION}-R0.1-SNAPSHOT")
-#end
+    #if ($IS_SPIGOT)
+        compileOnly("org.spigotmc:spigot-api:${MC_VERSION}-R0.1-SNAPSHOT")
+    #elseif ($IS_PAPER)
+        compileOnly("io.papermc.paper:paper-api:${MC_VERSION}-R0.1-SNAPSHOT")
+    #end
 }
 
 tasks {
-  runServer {
-    // Configure the Minecraft version for our task.
-    // This is the only required configuration besides applying the plugin.
-    // Your plugin's jar (or shadowJar if present) will be used automatically.
-    minecraftVersion("${API_VERSION}")
-  }
+    runServer {
+        minecraftVersion("${API_VERSION}")
+    }
 }
 
 def targetJavaVersion = ${JAVA_VERSION}
-java {
-    def javaVersion = JavaVersion.toVersion(targetJavaVersion)
-    sourceCompatibility = javaVersion
-    targetCompatibility = javaVersion
-    if (JavaVersion.current() < javaVersion) {
-        toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
-    }
-}
+        java {
+            def javaVersion = JavaVersion.toVersion(targetJavaVersion)
+            sourceCompatibility = javaVersion
+            targetCompatibility = javaVersion
+            if (JavaVersion.current() < javaVersion) {
+                toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
+            }
+        }
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
