@@ -41,6 +41,7 @@ import com.intellij.openapi.observable.properties.GraphProperty
 import com.intellij.openapi.observable.util.transform
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
+import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.ui.JBColor
 import com.intellij.ui.dsl.builder.AlignX
@@ -76,7 +77,7 @@ class CustomPlatformStep(
 
     val availableGroupsProperty = propertyGraph.property<Collection<String>>(emptyList())
     var availableGroups by availableGroupsProperty
-    val availableTemplatesProperty = propertyGraph.property<Collection<LoadedTemplate>>(emptyList())
+    val availableTemplatesProperty = propertyGraph.property<Collection<LoadedTemplate>>(listOf(EmptyLoadedTemplate))
     var availableTemplates by availableTemplatesProperty
     lateinit var availableGroupsSegmentedButton: SegmentedButton<String>
     lateinit var availableTemplatesSegmentedButton: SegmentedButton<LoadedTemplate>
@@ -145,21 +146,21 @@ class CustomPlatformStep(
 
         builder.row(MCDevBundle("creator.ui.custom.groups.label")) {
             availableGroupsSegmentedButton =
-                segmentedButton(emptyList<String>()) { text = it }
+                segmentedButton(emptyList<String>()) { string: String? -> text = string }
                     .bind(selectedGroupProperty)
         }.visibleIf(
             availableGroupsProperty.transform { it.size > 1 }
         )
 
-        builder.row(MCDevBundle("creator.ui.custom.templates.label")) {
+        val templateRow = builder.row(MCDevBundle("creator.ui.custom.templates.label")) {
             availableTemplatesSegmentedButton =
                 segmentedButton(emptyList()) { template: LoadedTemplate ->
                     text = template.label
                     toolTipText = template.tooltip
                 }.bind(selectedTemplateProperty)
-                    .validation {
-                        addApplyRule("", condition = templateProcessor::hasTemplateErrors)
-                    }
+                .validation {
+                    addApplyRule("", condition = templateProcessor::hasTemplateErrors)
+                }
         }.visibleIf(
             availableTemplatesProperty.transform { it.size > 1 }
         )
@@ -167,7 +168,6 @@ class CustomPlatformStep(
         availableTemplatesProperty.afterChange { newTemplates ->
             val groups = newTemplates.mapTo(linkedSetOf()) { it.descriptor.translatedGroup }
             availableGroupsSegmentedButton.items = groups
-            // availableGroupsSegmentedButton.visible(groups.size > 1)
             availableGroups = groups
             selectedGroup = groups.firstOrNull() ?: "empty"
         }
@@ -175,9 +175,10 @@ class CustomPlatformStep(
         selectedGroupProperty.afterChange { group ->
             val templates = availableTemplates.filter { it.descriptor.translatedGroup == group }
             availableTemplatesSegmentedButton.items = templates
-            // Force visiblity because the component might become hidden and not show up again
-            //  when the segmented button switches between dropdown and buttons
-            availableTemplatesSegmentedButton.visible(true)
+            (templates.size > 1).let { bool ->
+                templateRow.visible(bool)
+                availableTemplatesSegmentedButton.visible(bool)
+            }
             templatePropertyPlaceholder.component = null
             selectedTemplate = templates.firstOrNull() ?: EmptyLoadedTemplate
         }
@@ -221,7 +222,7 @@ class CustomPlatformStep(
         templateProvidersTextProperty.set(MCDevBundle("creator.step.generic.init_template_providers.message"))
         templateProvidersLoadingProperty.set(true)
 
-        // For some reason syncRefresh doesn't play nice with writeAction() coroutines so we do it beforehand
+        // For some reason, syncRefresh doesn't play nice with writeAction() coroutines so we do it beforehand
         application.invokeAndWait(
             { runWriteAction { VirtualFileManager.getInstance().syncRefresh() } },
             context.modalityState
@@ -250,11 +251,7 @@ class CustomPlatformStep(
         templateLoadingTextProperty.set(MCDevBundle("creator.step.generic.load_template.message"))
         templateLoadingProperty.set(true)
 
-        // For some reason syncRefresh doesn't play nice with writeAction() coroutines so we do it beforehand
-        application.invokeAndWait(
-            { runWriteAction { VirtualFileManager.getInstance().syncRefresh() } },
-            context.modalityState
-        )
+        LocalFileSystem.getInstance().refreshAndFindFileByNioFile(context.projectDirectory)!!.refresh(true, true)
 
         val dialogCoroutineContext = context.modalityState.asContextElement()
         val uiContext = dialogCoroutineContext + Dispatchers.EDT
