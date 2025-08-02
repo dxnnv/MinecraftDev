@@ -24,9 +24,7 @@ import com.demonwav.mcdev.MinecraftSettings
 import com.demonwav.mcdev.creator.custom.TemplateDescriptor
 import com.demonwav.mcdev.creator.custom.TemplateResourceBundle
 import com.demonwav.mcdev.util.fromJson
-import com.demonwav.mcdev.util.refreshSync
 import com.google.gson.Gson
-import com.intellij.DynamicBundle
 import com.intellij.ide.util.projectWizard.WizardContext
 import com.intellij.openapi.application.ModalityState
 import com.intellij.openapi.diagnostic.Attachment
@@ -46,6 +44,8 @@ import com.intellij.util.KeyedLazyInstance
 import com.intellij.util.xmlb.annotations.Attribute
 import java.util.ResourceBundle
 import javax.swing.JComponent
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * Extensions responsible for creating a [TemplateDescriptor] based on whatever data it is provided in its configuration
@@ -71,27 +71,26 @@ interface TemplateProvider {
 
         fun get(key: String): TemplateProvider? = COLLECTOR.findSingle(key)
 
-        fun getAllKeys() = EP_NAME.extensionList.mapNotNull { it.key }
+        fun getAllKeys() = EP_NAME.extensionList.map { it.key }
 
-        fun findTemplates(
+        suspend fun findTemplatesOffEdt(
             modalityState: ModalityState,
-            repoRoot: VirtualFile,
-            templates: MutableList<VfsLoadedTemplate> = mutableListOf(),
-            bundle: ResourceBundle? = loadMessagesBundle(modalityState, repoRoot)
-        ): List<VfsLoadedTemplate> {
+            repoRoot: VirtualFile
+        ): List<VfsLoadedTemplate> = withContext(Dispatchers.IO) {
+            val templates = mutableListOf<VfsLoadedTemplate>()
+            val bundle = loadMessagesBundleOffEdt(modalityState, repoRoot)
+
             val visitor = object : VirtualFileVisitor<Unit>() {
                 override fun visitFile(file: VirtualFile): Boolean {
-                    if (!file.isFile || !file.name.endsWith(".mcdev.template.json")) {
+                    if (!file.isFile || !file.name.endsWith(".mcdev.template.json"))
                         return true
-                    }
 
                     try {
                         createVfsLoadedTemplate(modalityState, file.parent, file, bundle = bundle)
                             ?.let(templates::add)
                     } catch (t: Throwable) {
-                        if (t is ControlFlowException) {
+                        if (t is ControlFlowException)
                             throw t
-                        }
 
                         val attachment = runCatching { Attachment(file.name, file.readText()) }.getOrNull()
                         if (attachment != null) {
@@ -104,58 +103,28 @@ interface TemplateProvider {
                     return true
                 }
             }
+
             VfsUtilCore.visitChildrenRecursively(repoRoot, visitor)
-            return templates
+            templates
         }
 
-        fun loadMessagesBundle(modalityState: ModalityState, repoRoot: VirtualFile): ResourceBundle? = try {
-            val locale = DynamicBundle.getLocale()
-            // Simplified bundle resolution, but covers all the most common cases
-            val baseBundle = doLoadMessageBundle(
-                repoRoot.findChild("messages.properties"),
-                modalityState,
-                null
-            )
-            val languageBundle = doLoadMessageBundle(
-                repoRoot.findChild("messages_${locale.language}.properties"),
-                modalityState,
-                baseBundle
-            )
-            doLoadMessageBundle(
-                repoRoot.findChild("messages_${locale.language}_${locale.country}.properties"),
-                modalityState,
-                languageBundle
-            )
-        } catch (t: Throwable) {
-            if (t is ControlFlowException) {
-                throw t
-            }
-
-            thisLogger().error("Failed to load resource bundle of template repository ${repoRoot.path}", t)
-            null
+        suspend fun loadMessagesBundleOffEdt(
+            modalityState: ModalityState,
+            repoRoot: VirtualFile
+        ): ResourceBundle? = withContext(Dispatchers.IO) {
+            repoRoot.findChild("messages.properties")
+                ?.let { doLoadMessageBundle(it) }
         }
 
         private fun doLoadMessageBundle(
-            file: VirtualFile?,
-            modalityState: ModalityState,
-            parent: ResourceBundle?
+            file: VirtualFile?
         ): ResourceBundle? {
-            if (file == null) {
-                return parent
-            }
+            if (file == null) return null
 
-            try {
-                return file.refreshSync(modalityState)
-                    ?.inputStream?.reader()?.use { TemplateResourceBundle(it, parent) }
-            } catch (t: Throwable) {
-                if (t is ControlFlowException) {
-                    return parent
-                }
-
-                thisLogger().error("Failed to load resource bundle ${file.path}", t)
-            }
-
-            return parent
+            val ioFile = VfsUtilCore.virtualToIoFile(file)
+            return if (ioFile.exists())
+                ioFile.reader().use { TemplateResourceBundle(it, null) }
+            else null
         }
 
         fun createVfsLoadedTemplate(
@@ -165,16 +134,13 @@ interface TemplateProvider {
             tooltip: String? = null,
             bundle: ResourceBundle? = null
         ): VfsLoadedTemplate? {
-            descriptorFile.refreshSync(modalityState)
             var descriptor = Gson().fromJson<TemplateDescriptor>(descriptorFile.readText())
             if (descriptor.version != TemplateDescriptor.FORMAT_VERSION) {
                 thisLogger().warn("Cannot handle template ${descriptorFile.path} of version ${descriptor.version}")
                 return null
             }
 
-            if (descriptor.hidden == true) {
-                return null
-            }
+            if (descriptor.hidden == true) return null
 
             descriptor.bundle = bundle
 
@@ -185,7 +151,7 @@ interface TemplateProvider {
                 descriptor.translateOrNull("platform.${labelKey.lowercase()}.label") ?: descriptor.translate(labelKey)
 
             if (descriptor.inherit != null) {
-                val parent = templateRoot.findFileByRelativePath(descriptor.inherit!!)
+                val parent = templateRoot.findFileByRelativePath(descriptor.inherit)
                 if (parent != null) {
                     parent.refresh(false, false)
                     val parentDescriptor = Gson().fromJson<TemplateDescriptor>(parent.readText())
