@@ -87,11 +87,11 @@ class ConfigurePluginUpdatesDialog : DialogWrapper(true) {
 
     init {
         title = "Configure Minecraft Development Plugin Updates"
-        for (channels in Channels.values()) {
+        for (channels in Channels.entries) {
             channelBox.component.addItem(channels.title)
         }
 
-        Channels.values().forEachIndexed { i, channel ->
+        Channels.entries.forEachIndexed { i, channel ->
             if (channel.hasChannel()) {
                 initialSelectedChannel = i + 1
                 return@forEachIndexed
@@ -109,12 +109,12 @@ class ConfigurePluginUpdatesDialog : DialogWrapper(true) {
 
     private fun saveSelectedChannel(index: Int) {
         val hosts = UpdateSettings.getInstance().storedPluginHosts
-        for (channel in Channels.values()) {
+        for (channel in Channels.entries) {
             hosts.remove(channel.url)
         }
 
         if (index != 0) {
-            val channel = Channels.values()[index - 1]
+            val channel = Channels.entries[index - 1]
             hosts.add(channel.url)
         }
     }
