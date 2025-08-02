@@ -106,7 +106,7 @@ class ListenerLineMarkerProvider : LineMarkerProviderDescriptor() {
                 return false
             }
 
-            val otherElement = info.getElement()
+            val otherElement = info.element
             val myElement = element
             return otherElement != null && myElement != null
         }

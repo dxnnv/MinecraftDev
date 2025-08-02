@@ -81,7 +81,10 @@ dependencies {
 
     implementation(libs.bundles.asm)
 
-    implementation(libs.bundles.fuel)
+    implementation(libs.bundles.fuel) {
+        exclude(group = "org.jetbrains.kotlin")
+        exclude(group = "org.jetbrains.kotlinx")
+    }
 
     intellijPlatform {
         intellijIdeaCommunity(libs.versions.intellij.ide, useInstaller = false)
@@ -95,6 +98,7 @@ dependencies {
         bundledPlugin("org.intellij.intelliLang")
         bundledPlugin("com.intellij.properties")
         bundledPlugin("Git4Idea")
+        bundledPlugin("com.intellij.modules.json")
 
         // Optional dependencies
         bundledPlugin("org.jetbrains.kotlin")
@@ -162,9 +166,9 @@ tasks.processResources {
             rename { "messages.MinecraftDevelopment$lang.properties" }
         }
     }
-    // These templates aren't allowed to be in a directory structure in the output jar
-    // But we have a lot of templates that would get real hard to deal with if we didn't have some structure
-    // So this just flattens out the fileTemplates/j2ee directory in the jar, while still letting us have directories
+    // These templates aren't allowed to be in a directory structure in the output jar.
+    // However, we have a lot of templates that would get really hard to deal with if we didn't have some structure,
+    // So this just flattens out the fileTemplates/J2EE directory in the jar, while still letting us have directories
     exclude("fileTemplates/j2ee/**")
     from(fileTree("src/main/resources/fileTemplates/j2ee").files) {
         eachFile {
