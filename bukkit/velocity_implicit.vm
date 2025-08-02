@@ -7,7 +7,6 @@
 #* @vtlvariable name="USE_GIT" type="boolean" *#
 
 #* @vtlvariable name="BUILD_COORDS" type="com.demonwav.mcdev.creator.custom.model.BuildSystemCoordinates" *#
-#* @vtlvariable name="BUILD_SYSTEM" type="java.lang.String" *#
 #* @vtlvariable name="LANGUAGE" type="java.lang.String" *#
 #* @vtlvariable name="MC_VERSION" type="com.demonwav.mcdev.util.SemanticVersion" *#
 #* @vtlvariable name="KOTLIN_VERSION" type="com.demonwav.mcdev.util.SemanticVersion" *#
@@ -15,6 +14,7 @@
 #* @vtlvariable name="PLUGIN_NAME" type="java.lang.String" *#
 #* @vtlvariable name="MAIN_CLASS" type="com.demonwav.mcdev.creator.custom.model.ClassFqn" *#
 #* @vtlvariable name="USE_PAPER_MANIFEST" type="boolean" *#
+#* @vtlvariable name="USE_PAPERWEIGHT" type="boolean" *#
 #* @vtlvariable name="DESCRIPTION" type="java.lang.String" *#
 #* @vtlvariable name="AUTHORS" type="com.demonwav.mcdev.creator.custom.model.StringList" *#
 #* @vtlvariable name="WEBSITE" type="java.lang.String" *#

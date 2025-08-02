@@ -1,11 +1,37 @@
 {
   "version": 1,
-  "group": "plugin",
+  "group": "proxy",
   "properties": [
+    {
+      "name": "PRESET",
+      "label": "Preset",
+      "type": "string",
+      "order": 5,
+      "options": [
+        "Self",
+        "Org",
+        "Custom"
+      ],
+      "default": "Self"
+    },
+    {
+      "name": "COORD_VERSION",
+      "label": "Version",
+      "type": "semantic_version",
+      "default": "1.0.0",
+      "order": 15,
+      "visible": true
+    },
     {
       "name": "BUILD_COORDS",
       "type": "build_system_coordinates",
-      "order": 10
+      "order": 20
+    },
+    {
+      "name": "BUILD_SYSTEM",
+      "type": "string",
+      "default": "Gradle",
+      "visible": false
     },
     {
       "name": "LANGUAGE",
@@ -16,26 +42,13 @@
       ]
     },
     {
-      "name": "MC_VERSION",
+      "name": "VELOCITY_VERSION",
       "type": "semantic_version",
       "forceDropdown": true,
       "options": [
-        "1.21.8",
-        "1.21.7",
-        "1.21.6",
-        "1.21.5",
-        "1.21.4",
-        "1.21.3",
-        "1.21.2",
-        "1.21.1",
-        "1.21",
-        "1.20.6",
-        "1.20.4",
-        "1.20.3",
-        "1.20.2",
-        "1.20.1",
-        "1.19.4",
-        "1.18.2"
+        "3.4.0-SNAPSHOT",
+        "3.3.0-SNAPSHOT",
+        "3.2.0-SNAPSHOT"
       ],
       "default": 0
     },
@@ -51,29 +64,37 @@
       }
     },
     {
-      "name": "API_VERSION",
-      "type": "semantic_version",
-      "options": [
-        "1.21",
-        "1.20",
-        "1.19",
-        "1.18",
-        "1.17"
-      ],
-      "visible": false,
-      "derives": {
-        "parents": ["MC_VERSION"],
-        "method": "extractVersionMajorMinor"
-      }
-    },
-    {
       "name": "PLUGIN_NAME",
       "type": "string",
+      "visible": false,
       "inheritFrom": "PROJECT_NAME"
+    },
+    {
+      "name": "PLUGIN_ID",
+      "type": "string",
+      "validator": "[a-z][a-z0-9-_]{1,63}",
+      "visible": {
+        "dependsOn": ["PRESET"],
+        "condition": "$PRESET == 'Custom'"
+      },
+      "derives": {
+        "parents": ["PROJECT_NAME"],
+        "method": "replace",
+        "parameters": {
+          "regex": "[^a-z0-9-_]+",
+          "replacement": "_",
+          "maxLength": 64,
+          "lowercase": true
+        }
+      }
     },
     {
       "name": "MAIN_CLASS",
       "type": "class_fqn",
+      "visible": {
+        "dependsOn": ["PRESET"],
+        "condition": "$PRESET == 'Custom'"
+      },
       "derives": {
         "parents": ["BUILD_COORDS", "PLUGIN_NAME"],
         "method": "suggestClassName"
@@ -87,35 +108,37 @@
           "name": "DESCRIPTION",
           "type": "string",
           "default": "",
+          "remember": false,
           "nullIfDefault": true
         },
         {
           "name": "AUTHORS",
           "type": "inline_string_list",
-          "default": "",
+          "default": "dxnnv",
           "nullIfDefault": true
         },
         {
           "name": "WEBSITE",
           "type": "string",
           "default": "",
-          "nullIfDefault": true
-        },
-        {
-          "name": "LOG_PREFIX",
-          "type": "string",
-          "default": "",
-          "nullIfDefault": true
-        },
-        {
-          "name": "LOAD_AT",
-          "type": "string",
-          "options": [
-            "STARTUP",
-            "POSTWORLD"
-          ],
-          "default": "POSTWORLD",
-          "nullIfDefault": true
+          "nullIfDefault": true,
+          "visible": {
+            "dependsOn": ["PRESET"],
+            "condition": "$PRESET == 'Custom'"
+          },
+          "derives": {
+            "parents": ["PRESET"],
+            "select": [
+              {
+                "condition": "$PRESET == 'Self'",
+                "value": "https://dxnny.dev"
+              },
+              {
+                "condition": "$PRESET == 'Org'",
+                "value": "https://flamefrags.com"
+              }
+            ]
+          }
         }
       ]
     },
@@ -124,11 +147,24 @@
       "type": "integer",
       "order": 20,
       "default": 21,
-      "visible": true,
+      "visible": false,
       "derives": {
-        "parents": ["MC_VERSION"],
-        "method": "recommendJavaVersionForMcVersion",
-        "default": 17
+        "parents": ["VELOCITY_VERSION"],
+        "default": 8,
+        "select": [
+          {
+            "condition": "$VELOCITY_VERSION.compareTo($semver.release(3, 4)) >= 0",
+            "value": 21
+          },
+          {
+            "condition": "$VELOCITY_VERSION.compareTo($semver.release(3, 3)) >= 0",
+            "value": 17
+          },
+          {
+            "condition": "$VELOCITY_VERSION.compareTo($semver.release(3)) >= 0",
+            "value": 11
+          }
+        ]
       }
     },
     {
@@ -136,17 +172,11 @@
       "type": "jdk",
       "order": 20,
       "default": "JAVA_VERSION"
-    },
-    {
-      "name": "IS_SPIGOT",
-      "type": "boolean",
-      "visible": false,
-      "default": true
     }
   ],
   "files": [
     {
-      "template": "../gitignore.ft",
+      "template": "../${BUILD_SYSTEM}.gitignore.ft",
       "destination": ".gitignore",
       "condition": "$USE_GIT"
     },
@@ -171,12 +201,12 @@
       "condition": "$LANGUAGE=='Kotlin'"
     },
     {
-      "template": "../gradle-wrapper.properties.ft",
-      "destination": "gradle/wrapper/gradle-wrapper.properties"
+      "template": "gradle.properties.ft",
+      "destination": "gradle.properties"
     },
     {
-      "template": "plugin.yml.ft",
-      "destination": "src/main/resources/plugin.yml"
+      "template": "../gradle-wrapper.properties.ft",
+      "destination": "gradle/wrapper/gradle-wrapper.properties"
     },
     {
       "template": "MainClass.java.ft",
@@ -189,6 +219,10 @@
       "destination": "src/main/kotlin/${MAIN_CLASS.path}.kt",
       "condition": "$LANGUAGE=='Kotlin'",
       "openInEditor": true
+    },
+    {
+      "template": "BuildConstants.java.ft",
+      "destination": "src/main/templates/${MAIN_CLASS.packagePath}/BuildConstants.java"
     }
   ],
   "finalizers": [
