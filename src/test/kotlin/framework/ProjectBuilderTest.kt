@@ -69,13 +69,6 @@ abstract class ProjectBuilderTest(descriptor: LightProjectDescriptor? = null) {
 
     @AfterEach
     fun tearDown() {
-        try {
-            fixture.tearDown()
-        } catch (e: ComparisonFailure) {
-            // For some reason this failure started to happen since 2024.2, but has visibly no bad side effect so far?
-            if (e.message?.startsWith("Code style settings damaged") != true) {
-                throw e
-            }
-        }
+        fixture.tearDown()
     }
 }

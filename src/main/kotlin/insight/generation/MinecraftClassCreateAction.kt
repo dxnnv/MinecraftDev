@@ -23,7 +23,6 @@ package com.demonwav.mcdev.insight.generation
 import com.demonwav.mcdev.asset.GeneralAssets
 import com.demonwav.mcdev.asset.MCDevBundle
 import com.intellij.codeInsight.daemon.JavaErrorBundle
-import com.intellij.codeInsight.daemon.impl.analysis.HighlightClassUtil
 import com.intellij.ide.actions.CreateFileFromTemplateDialog
 import com.intellij.ide.actions.CreateTemplateInPackageAction
 import com.intellij.openapi.actionSystem.DataContext
@@ -36,6 +35,7 @@ import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiDirectory
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiNameHelper
+import com.intellij.psi.util.PsiTypesUtil
 import com.intellij.psi.util.PsiUtil
 import org.jetbrains.jps.model.java.JavaModuleSourceRootTypes
 
@@ -85,7 +85,7 @@ class MinecraftClassCreateAction :
 
             val shortName = StringUtil.getShortName(inputString)
             val languageLevel = PsiUtil.getLanguageLevel(directory)
-            return if (HighlightClassUtil.isRestrictedIdentifier(shortName, languageLevel)) {
+            return if (PsiTypesUtil.isRestrictedIdentifier(shortName, languageLevel)) {
                 JavaErrorBundle.message("restricted.identifier", shortName)
             } else {
                 null

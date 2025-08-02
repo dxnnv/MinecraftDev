@@ -19,7 +19,6 @@
  */
 
 import org.gradle.internal.jvm.Jvm
-import org.jetbrains.changelog.Changelog
 import org.jetbrains.gradle.ext.settings
 import org.jetbrains.gradle.ext.taskTriggers
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
@@ -27,7 +26,6 @@ import org.jetbrains.intellij.platform.gradle.tasks.PrepareSandboxTask
 
 plugins {
     groovy
-    id(libs.plugins.changelog.get().pluginId)
     alias(libs.plugins.idea.ext)
     `mcdev-core`
     `mcdev-parsing`
@@ -84,10 +82,13 @@ dependencies {
 
     implementation(libs.bundles.asm)
 
-    implementation(libs.bundles.fuel)
+    implementation(libs.bundles.fuel) {
+        exclude(group = "org.jetbrains.kotlin")
+        exclude(group = "org.jetbrains.kotlinx")
+    }
 
     intellijPlatform {
-        intellijIdeaCommunity(libs.versions.intellij.ide)
+        intellijIdeaCommunity(libs.versions.intellij.ide) { useInstaller = false }
 
         // Bundled plugin dependencies
         bundledPlugin("com.intellij.java")
@@ -98,6 +99,7 @@ dependencies {
         bundledPlugin("org.intellij.intelliLang")
         bundledPlugin("com.intellij.properties")
         bundledPlugin("Git4Idea")
+        bundledPlugin("com.intellij.modules.json")
 
         // Optional dependencies
         bundledPlugin("org.jetbrains.kotlin")
@@ -106,6 +108,7 @@ dependencies {
 
 
         testFramework(TestFrameworkType.JUnit5)
+        testFramework(TestFrameworkType.Platform)
         testFramework(TestFrameworkType.Plugin.Java)
 
         pluginVerifier()
@@ -119,16 +122,10 @@ dependencies {
     }
 
     // For non-SNAPSHOT versions (unless Jetbrains fixes this...) find the version with:
-    // afterEvaluate { println(intellij.ideaDependency.get().buildNumber.substring(intellij.type.get().length + 1)) }
+    // afterEvaluate { println(intellijPlatform.productInfo.buildNumber) }
     gradleToolingExtension(libs.groovy)
     gradleToolingExtension(libs.gradleToolingExtension)
     gradleToolingExtension(libs.annotations)
-}
-
-changelog {
-    version = coreVersion
-    groups.empty()
-    path = "changelog.md"
 }
 
 intellijPlatform {
@@ -141,12 +138,7 @@ intellijPlatform {
     }
 }
 
-tasks.patchPluginXml {
-    val changelog = project.changelog
-    changeNotes = changelog.render(Changelog.OutputType.HTML)
-}
-
-// Compile classes to be loaded into the Gradle VM to Java 5 to match Groovy
+// Compile classes to be loaded into the Gradle VM to Java 5 to match Groovy.
 // This is for maximum compatibility, these classes will be loaded into every Gradle import on all
 // projects (not just Minecraft), so we don't want to break that with an incompatible class version.
 tasks.named(gradleToolingExtensionSourceSet.compileJavaTaskName, JavaCompile::class) {
@@ -168,9 +160,9 @@ tasks.processResources {
             rename { "messages.MinecraftDevelopment$lang.properties" }
         }
     }
-    // These templates aren't allowed to be in a directory structure in the output jar
-    // But we have a lot of templates that would get real hard to deal with if we didn't have some structure
-    // So this just flattens out the fileTemplates/j2ee directory in the jar, while still letting us have directories
+    // These templates aren't allowed to be in a directory structure in the output jar.
+    // However, we have a lot of templates that would get really hard to deal with if we didn't have some structure,
+    // So this just flattens out the fileTemplates/J2EE directory in the jar, while still letting us have directories
     exclude("fileTemplates/j2ee/**")
     from(fileTree("src/main/resources/fileTemplates/j2ee").files) {
         eachFile {
@@ -278,13 +270,4 @@ tasks.runIde {
         systemProperty("idea.ProcessCanceledException", "disabled")
         systemProperty("idea.debug.mode", "true")
     }
-
-    // Kotlin K2 is enabled by default, uncomment to switch to K1
-    // jvmArgumentProviders += CommandLineArgumentProvider {
-    //     listOf("-Didea.kotlin.plugin.use.k2=false")
-    // }
-
-    // Set these properties to test different languages
-    // systemProperty("user.language", "fr")
-    // systemProperty("user.country", "FR")
 }
