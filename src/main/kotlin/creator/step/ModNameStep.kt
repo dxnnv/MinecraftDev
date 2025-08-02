@@ -68,11 +68,6 @@ abstract class AbstractModNameStep(parent: NewProjectWizardStep) : AbstractNewPr
     }
 }
 
-class ModNameStep(parent: NewProjectWizardStep) : AbstractModNameStep(parent) {
-    override val label
-        get() = MCDevBundle("creator.ui.mod_name.label")
-}
-
 class PluginNameStep(parent: NewProjectWizardStep) : AbstractModNameStep(parent) {
     override val label
         get() = MCDevBundle("creator.ui.plugin_name.label")
