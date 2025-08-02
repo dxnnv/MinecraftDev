@@ -1,0 +1,241 @@
+{
+  "version": 1,
+  "group": "proxy",
+  "properties": [
+    {
+      "name": "PRESET",
+      "label": "Preset",
+      "type": "string",
+      "order": 5,
+      "options": [
+        "Self",
+        "Org",
+        "Custom"
+      ],
+      "default": "Self"
+    },
+    {
+      "name": "COORD_VERSION",
+      "label": "Version",
+      "type": "semantic_version",
+      "default": "1.0.0",
+      "order": 15,
+      "visible": true
+    },
+    {
+      "name": "BUILD_COORDS",
+      "type": "build_system_coordinates",
+      "order": 20
+    },
+    {
+      "name": "BUILD_SYSTEM",
+      "type": "string",
+      "default": "Gradle",
+      "visible": false
+    },
+    {
+      "name": "LANGUAGE",
+      "type": "string",
+      "options": [
+        "Java",
+        "Kotlin"
+      ]
+    },
+    {
+      "name": "VELOCITY_VERSION",
+      "type": "semantic_version",
+      "forceDropdown": true,
+      "options": [
+        "3.4.0-SNAPSHOT",
+        "3.3.0-SNAPSHOT",
+        "3.2.0-SNAPSHOT"
+      ],
+      "default": 0
+    },
+    {
+      "name": "KOTLIN_VERSION",
+      "type": "maven_artifact_version",
+      "parameters": {
+        "sourceUrl": "https://repo1.maven.org/maven2/org/jetbrains/kotlin/kotlin-stdlib-jdk8/maven-metadata.xml"
+      },
+      "visible": {
+        "dependsOn": ["LANGUAGE"],
+        "condition": "$LANGUAGE == 'Kotlin'"
+      }
+    },
+    {
+      "name": "PLUGIN_NAME",
+      "type": "string",
+      "visible": false,
+      "inheritFrom": "PROJECT_NAME"
+    },
+    {
+      "name": "PLUGIN_ID",
+      "type": "string",
+      "validator": "[a-z][a-z0-9-_]{1,63}",
+      "visible": {
+        "dependsOn": ["PRESET"],
+        "condition": "$PRESET == 'Custom'"
+      },
+      "derives": {
+        "parents": ["PROJECT_NAME"],
+        "method": "replace",
+        "parameters": {
+          "regex": "[^a-z0-9-_]+",
+          "replacement": "_",
+          "maxLength": 64,
+          "lowercase": true
+        }
+      }
+    },
+    {
+      "name": "MAIN_CLASS",
+      "type": "class_fqn",
+      "visible": {
+        "dependsOn": ["PRESET"],
+        "condition": "$PRESET == 'Custom'"
+      },
+      "derives": {
+        "parents": ["BUILD_COORDS", "PLUGIN_NAME"],
+        "method": "suggestClassName"
+      }
+    },
+    {
+      "label": "creator.ui.optional_settings.label",
+      "collapsible": true,
+      "groupProperties": [
+        {
+          "name": "DESCRIPTION",
+          "type": "string",
+          "default": "",
+          "remember": false,
+          "nullIfDefault": true
+        },
+        {
+          "name": "AUTHORS",
+          "type": "inline_string_list",
+          "default": "dxnnv",
+          "nullIfDefault": true
+        },
+        {
+          "name": "WEBSITE",
+          "type": "string",
+          "default": "",
+          "nullIfDefault": true,
+          "visible": {
+            "dependsOn": ["PRESET"],
+            "condition": "$PRESET == 'Custom'"
+          },
+          "derives": {
+            "parents": ["PRESET"],
+            "select": [
+              {
+                "condition": "$PRESET == 'Self'",
+                "value": "https://dxnny.dev"
+              },
+              {
+                "condition": "$PRESET == 'Org'",
+                "value": "https://flamefrags.com"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "JAVA_VERSION",
+      "type": "integer",
+      "order": 20,
+      "default": 21,
+      "visible": false,
+      "derives": {
+        "parents": ["VELOCITY_VERSION"],
+        "default": 8,
+        "select": [
+          {
+            "condition": "$VELOCITY_VERSION.compareTo($semver.release(3, 4)) >= 0",
+            "value": 21
+          },
+          {
+            "condition": "$VELOCITY_VERSION.compareTo($semver.release(3, 3)) >= 0",
+            "value": 17
+          },
+          {
+            "condition": "$VELOCITY_VERSION.compareTo($semver.release(3)) >= 0",
+            "value": 11
+          }
+        ]
+      }
+    },
+    {
+      "name": "JDK",
+      "type": "jdk",
+      "order": 20,
+      "default": "JAVA_VERSION"
+    }
+  ],
+  "files": [
+    {
+      "template": "../${BUILD_SYSTEM}.gitignore.ft",
+      "destination": ".gitignore",
+      "condition": "$USE_GIT"
+    },
+    {
+      "template": "build.gradle.ft",
+      "destination": "build.gradle",
+      "condition": "$LANGUAGE=='Java'"
+    },
+    {
+      "template": "settings.gradle.ft",
+      "destination": "settings.gradle",
+      "condition": "$LANGUAGE=='Java'"
+    },
+    {
+      "template": "build.gradle.kts.ft",
+      "destination": "build.gradle.kts",
+      "condition": "$LANGUAGE=='Kotlin'"
+    },
+    {
+      "template": "settings.gradle.kts.ft",
+      "destination": "settings.gradle.kts",
+      "condition": "$LANGUAGE=='Kotlin'"
+    },
+    {
+      "template": "gradle.properties.ft",
+      "destination": "gradle.properties"
+    },
+    {
+      "template": "../gradle-wrapper.properties.ft",
+      "destination": "gradle/wrapper/gradle-wrapper.properties"
+    },
+    {
+      "template": "MainClass.java.ft",
+      "destination": "src/main/java/${MAIN_CLASS.path}.java",
+      "condition": "$LANGUAGE=='Java'",
+      "openInEditor": true
+    },
+    {
+      "template": "MainClass.kt.ft",
+      "destination": "src/main/kotlin/${MAIN_CLASS.path}.kt",
+      "condition": "$LANGUAGE=='Kotlin'",
+      "openInEditor": true
+    },
+    {
+      "template": "BuildConstants.java.ft",
+      "destination": "src/main/templates/${MAIN_CLASS.packagePath}/BuildConstants.java"
+    }
+  ],
+  "finalizers": [
+    {
+      "type": "import_gradle_project"
+    },
+    {
+      "type": "run_gradle_tasks",
+      "tasks": ["wrapper"]
+    },
+    {
+      "type": "git_add_all",
+      "condition": "$USE_GIT"
+    }
+  ]
+}
