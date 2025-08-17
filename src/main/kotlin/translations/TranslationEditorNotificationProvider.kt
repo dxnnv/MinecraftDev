@@ -59,13 +59,12 @@ class TranslationEditorNotificationProvider : EditorNotificationProvider {
         }
 
         return Function {
-            createNotificationPanel(missingTranslations, false, file, project)
+            createNotificationPanel(missingTranslations, file, project)
         }
     }
 
     private fun createNotificationPanel(
         missingTranslations: Sequence<Translation>,
-        hasMcpModule: Boolean,
         file: VirtualFile,
         project: Project
     ): InfoPanel {
@@ -83,25 +82,7 @@ class TranslationEditorNotificationProvider : EditorNotificationProvider {
                 EditorNotifications.updateAll()
             }
 
-            if (!hasMcpModule) {
-                // TranslationSorter.query requires an MCP module to work
-                return@createActionLabel
-            }
-
-            val sort = MessageDialogBuilder.yesNo("Sort Translations", "Would you like to sort all translations now?")
-                .ask(project)
-            if (sort) {
-                try {
-                    TranslationSorter.query(project, psi, true, Ordering.LIKE_DEFAULT)
-                } catch (e: Exception) {
-                    Notification(
-                        "Translations sorting error",
-                        "Error sorting translations",
-                        e.message ?: e.stackTraceToString(),
-                        NotificationType.WARNING,
-                    ).notify(project)
-                }
-            }
+            return@createActionLabel
         }
         panel.createActionLabel("Hide notification") {
             panel.isVisible = false
