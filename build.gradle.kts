@@ -90,7 +90,7 @@ dependencies {
     intellijPlatform {
         intellijIdeaCommunity(libs.versions.intellij.ide) { useInstaller = false }
 
-        // Bundled plugin dependencies
+         // Bundled plugin dependencies
         bundledPlugin("com.intellij.java")
         bundledPlugin("org.jetbrains.idea.maven")
         bundledPlugin("com.intellij.gradle")
@@ -204,7 +204,7 @@ license {
 
     tasks {
         register("gradle") {
-            files.from(
+            files(
                 fileTree(project.projectDir) {
                     include("*.gradle.kts", "gradle.properties")
                     exclude("**/buildSrc/**", "**/build/**")
@@ -212,7 +212,7 @@ license {
             )
         }
         register("buildSrc") {
-            files.from(
+            files(
                 project.fileTree(project.projectDir.resolve("buildSrc")) {
                     include("**/*.kt", "**/*.kts")
                     exclude("**/build/**")
@@ -220,7 +220,7 @@ license {
             )
         }
         register("grammars") {
-            files.from(project.fileTree("src/main/grammars"))
+            files(project.fileTree("src/main/grammars"))
         }
     }
 }
@@ -255,7 +255,6 @@ sourceSets.main { java.srcDir(generate) }
 tasks.clean { delete(generate) }
 
 tasks.withType<PrepareSandboxTask> {
-    pluginJar.set(tasks.jar.get().archiveFile)
     val pluginDirName = intellijPlatform.projectName.get()
     from("templates") {
         exclude(".git")

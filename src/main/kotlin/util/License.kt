@@ -38,7 +38,7 @@ enum class License(private val displayName: String, val id: String) {
     override fun toString() = displayName
 
     companion object {
-        private val byId = values().associateBy { it.id }
+        private val byId = License.entries.associateBy { it.id }
         fun byId(id: String) = byId[id]
     }
 }
