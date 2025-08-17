@@ -62,7 +62,7 @@ class BuildSystemCoordinatesCreatorProperty(
         return deserialize(str)
     }
 
-    private fun createDefaultValue() = BuildSystemCoordinates("org.example", "", "1.0-SNAPSHOT")
+    private fun createDefaultValue() = BuildSystemCoordinates("org.example", "", "1.0.0")
 
     override fun serialize(value: BuildSystemCoordinates): String =
         "${value.groupId}:${value.artifactId}:${value.version}"
@@ -123,9 +123,7 @@ class BuildSystemCoordinatesCreatorProperty(
     }
 
     override fun buildUi(panel: Panel) {
-        val presetProp = context.properties["PRESET"]!!.graphProperty
-
-        val wrapper = panel.panel {
+        panel.panel {
             collapsibleGroup(MCDevBundle("creator.ui.group.title")) {
                 this.row(MCDevBundle("creator.ui.group.group_id")) {
                     this.textField()
@@ -148,14 +146,7 @@ class BuildSystemCoordinatesCreatorProperty(
                         .validationRequestor(WHEN_GRAPH_PROPAGATION_FINISHED(graph))
                         .textValidation(BuiltinValidations.validVersion)
                 }
-            }.expanded = true
-        }
-
-        wrapper.visible(presetProp.get() == "Custom")
-
-
-        presetProp.afterChange { newPreset ->
-            wrapper.visible(newPreset == "Custom")
+            }.expanded = false
         }
     }
 
