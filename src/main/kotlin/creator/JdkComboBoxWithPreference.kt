@@ -89,8 +89,8 @@ class JdkComboBoxWithPreference internal constructor(
             preferenceData.jdk = version
             reloadModel()
 
-            for (jdkVersion in version.ordinal until JavaSdkVersion.values().size) {
-                val jdk = JavaSdkVersion.values()[jdkVersion]
+            for (jdkVersion in version.ordinal until JavaSdkVersion.entries.size) {
+                val jdk = JavaSdkVersion.entries[jdkVersion]
 
                 val preferredSdkPath = preferenceData.sdkPathByJdk[jdk]
                 if (preferredSdkPath != null) {
@@ -146,7 +146,7 @@ fun Row.jdkComboBoxWithPreference(
         for (preferenceDataStr in preferenceDataStrs) {
             val parts = preferenceDataStr.split('=', limit = 2)
             val featureVersion = parts.firstOrNull()?.toIntOrNull() ?: continue
-            val knownJdkVersions = JavaSdkVersion.values()
+            val knownJdkVersions = JavaSdkVersion.entries.toTypedArray()
             if (featureVersion !in knownJdkVersions.indices) {
                 continue
             }
