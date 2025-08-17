@@ -39,6 +39,6 @@ enum class NbtTypeId(val typeIdByte: Byte, val tagName: String, val tagClass: KC
     ;
 
     companion object {
-        fun getById(id: Byte) = values().firstOrNull { it.typeIdByte == id }
+        fun getById(id: Byte) = NbtTypeId.entries.firstOrNull { it.typeIdByte == id }
     }
 }
