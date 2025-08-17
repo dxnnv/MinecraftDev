@@ -20,27 +20,28 @@
 
 package com.demonwav.mcdev.util
 
+import com.intellij.ui.JBColor
 import java.awt.Color
 
 @Suppress("MemberVisibilityCanBePrivate")
 object CommonColors {
 
-    val DARK_RED = Color(0xAA0000)
-    val RED = Color(0xFF5555)
-    val GOLD = Color(0xFFAA00)
-    val YELLOW = Color(0xFFFF55)
-    val DARK_GREEN = Color(0x00AA00)
-    val GREEN = Color(0x55FF55)
-    val AQUA = Color(0x55FFFF)
-    val DARK_AQUA = Color(0x00AAAA)
-    val DARK_BLUE = Color(0x0000AA)
-    val BLUE = Color(0x5555FF)
-    val LIGHT_PURPLE = Color(0xFF55FF)
-    val DARK_PURPLE = Color(0xAA00AA)
-    val WHITE = Color(0xFFFFFF)
-    val GRAY = Color(0xAAAAAA)
-    val DARK_GRAY = Color(0x555555)
-    val BLACK = Color(0x000000)
+    val DARK_RED: Color = JBColor.decode("#AA0000")
+    val RED: Color = JBColor.decode("#FF5555")
+    val GOLD: Color = JBColor.decode("#FFAA00")
+    val YELLOW: Color = JBColor.decode("#FFFF55")
+    val DARK_GREEN: Color = JBColor.decode("#00AA00")
+    val GREEN: Color = JBColor.decode("#55FF55")
+    val AQUA: Color = JBColor.decode("#55FFFF")
+    val DARK_AQUA: Color = JBColor.decode("#00AAAA")
+    val DARK_BLUE: Color = JBColor.decode("#0000AA")
+    val BLUE: Color = JBColor.decode("#5555FF")
+    val LIGHT_PURPLE: Color = JBColor.decode("#FF55FF")
+    val DARK_PURPLE: Color = JBColor.decode("#AA00AA")
+    val WHITE: Color = JBColor.decode("#FFFFFF")
+    val GRAY: Color = JBColor.decode("#AAAAAA")
+    val DARK_GRAY: Color = JBColor.decode("#555555")
+    val BLACK: Color = JBColor.decode("#000000")
 
     fun applyStandardColors(map: MutableMap<String, Color>, prefix: String) {
         map.apply {

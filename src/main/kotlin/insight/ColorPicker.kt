@@ -39,11 +39,7 @@ class ColorPicker(private val colorMap: Map<String, Color>, project: Project, pa
     private val panel = JPanel(GridBagLayout())
 
     private var chosenColor: String? = null
-    private val dialog: ColorPickerDialog
-
-    init {
-        dialog = ColorPickerDialog(project, parent, panel)
-    }
+    private val dialog: ColorPickerDialog = ColorPickerDialog(project, parent, panel)
 
     fun showDialog(): String? {
         init()

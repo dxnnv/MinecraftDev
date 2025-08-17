@@ -82,8 +82,8 @@ private fun <T> findColorFromExpression(
         val map = abstractModuleType.classToColorMappings(module)
         for (entry in map.entries) {
             // This is such a hack
-            // Okay, type will be the fully-qualified class, but it will exclude the actual enum
-            // the expression will be the non-fully-qualified class with the enum
+            // Okay, type will be the fully qualified class, but it will exclude the actual enum
+            // the expression will be the non-fully qualified class with the enum,
             // So we combine those checks and get this
             val colorClass = entry.key.substringBeforeLast('.')
             val colorName = entry.key.substringAfterLast('.')
@@ -178,7 +178,7 @@ private fun findColorFromCallExpression(
 
 private fun colorFromSingleArgument(expression: UExpression): Color? {
     return when (val paramVal = expression.evaluate()) {
-        is Int -> Color(paramVal as? Int ?: return null)
+        is Int -> Color(paramVal)
         is String -> {
             if (paramVal.startsWith("#")) {
                 val hexString = paramVal.substring(1)
@@ -215,7 +215,7 @@ private fun colorFromThreeArguments(expressions: List<UExpression>): Color? {
     val b = normalize(expressions[2].evaluate()) ?: return null
     return try {
         Color(r, g, b)
-    } catch (e: IllegalArgumentException) {
+    } catch (_: IllegalArgumentException) {
         // Invalid color component
         null
     }
@@ -240,7 +240,7 @@ fun UElement.setColor(color: String, isStringLiteral: Boolean = false) {
         val newColorRef = generationPlugin?.getElementFactory(project)?.createQualifiedReference(color, sourcePsi)
             ?: return@runWriteAction
         if (this.lang.id == "kotlin") {
-            // Kotlin UAST is a bit different, annoying but I couldn't find a better way
+            // Kotlin UAST is a bit different, annoying, but I couldn't find a better way
             val grandparent = parent?.uastParent
             if (grandparent is UQualifiedReferenceExpression) {
                 grandparent.replace(newColorRef)
