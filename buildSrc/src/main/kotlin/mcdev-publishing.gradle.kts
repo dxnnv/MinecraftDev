@@ -64,7 +64,7 @@ tasks.publishPlugin {
                 }
                 @Suppress("DEPRECATION")
                 val uploadBean = repositoryClient.uploader.upload(
-                    id = pluginId,
+                    id = pluginId.toInt(),
                     file = path.toFile(),
                     channel = channel.takeIf { it != "default" },
                     notes = null,
