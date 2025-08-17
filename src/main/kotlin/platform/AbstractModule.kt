@@ -48,8 +48,8 @@ abstract class AbstractModule(protected val facet: MinecraftFacet) {
 
     /**
      * By default, this method is provided in the case that a specific platform has no
-     * listener handling whatsoever, or simply accepts event listeners with random
-     * classes. This is rather open ended. Primarily this should (platform dependent)
+     * listener handling whatsoever or simply accepts event listeners with random
+     * classes. This is rather openly ended. Primarily, this should (platform-dependent)
      * evaluate to the type (or multiple types) to determine whether the event listener
      * is not going to throw an error at runtime.
 

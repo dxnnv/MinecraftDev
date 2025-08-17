@@ -67,7 +67,7 @@ class ChangeTranslationQuickFix(private val name: String) : LocalQuickFix {
                 ModalityState.current(),
                 false,
             )
-        } catch (ignored: IncorrectOperationException) {
+        } catch (_: IncorrectOperationException) {
         }
     }
 

@@ -115,8 +115,8 @@ object AnonymousFeedback {
                 sb.append("```\n")
 
                 try {
-                    // No clue what the data format of the attachment is
-                    // but if we try to decode it as UTF-8 and it succeeds, chances are likely that's what it is
+                    // No clue what the data format of the attachment is,
+                    // but if we try to decode it as UTF-8, and it succeeds, chances are likely that's what it is
                     val charBuf = Charsets.UTF_8.newDecoder()
                         .onMalformedInput(CodingErrorAction.REPORT)
                         .onUnmappableCharacter(CodingErrorAction.REPORT)
@@ -156,10 +156,10 @@ object AnonymousFeedback {
         return connection
     }
 
-    private const val openIssueUrl = "$BASE_URL?state=open&creator=minecraft-dev-autoreporter&per_page=100"
-    private const val closedIssueUrl = "$BASE_URL?state=closed&creator=minecraft-dev-autoreporter&per_page=100"
+    private const val OPEN_ISSUE_URL = "$BASE_URL?state=open&creator=minecraft-dev-autoreporter&per_page=100"
+    private const val CLOSED_ISSUE_URL = "$BASE_URL?state=closed&creator=minecraft-dev-autoreporter&per_page=100"
 
-    private const val packagePrefix = "\tat com.demonwav.mcdev"
+    private const val PACKAGE_PREFIX = "\tat com.demonwav.mcdev"
 
     private fun findDuplicateIssue(envDetails: LinkedHashMap<String, String?>, factory: HttpConnectionFactory): Int? {
         val numberRegex = Regex("\\d+")
@@ -168,7 +168,7 @@ object AnonymousFeedback {
         val stack = envDetails["error.raw_stacktrace"]?.replace(numberRegex, "") ?: return null
 
         val ourMcdevParts = stack.lineSequence()
-            .filter { line -> line.startsWith(packagePrefix) }
+            .filter { line -> line.startsWith(PACKAGE_PREFIX) }
             .map { it.trim() }
             .toList()
 
@@ -195,7 +195,7 @@ object AnonymousFeedback {
             val stackText = body.substring(first, second)
 
             val theirMcdevParts = stackText.lineSequence()
-                .filter { line -> line.startsWith(packagePrefix) }
+                .filter { line -> line.startsWith(PACKAGE_PREFIX) }
                 .map { it.trim() }
                 .toList()
 
@@ -203,8 +203,8 @@ object AnonymousFeedback {
         }
 
         // Look first for an open issue, then for a closed issue if one isn't found
-        val block = getAllIssues(openIssueUrl, factory)?.firstOrNull(predicate)
-            ?: getAllIssues(closedIssueUrl, factory, limit = 300)?.firstOrNull(predicate)
+        val block = getAllIssues(OPEN_ISSUE_URL, factory)?.firstOrNull(predicate)
+            ?: getAllIssues(CLOSED_ISSUE_URL, factory, limit = 300)?.firstOrNull(predicate)
             ?: return null
         return (block["number"] as Double).toInt()
     }
@@ -291,9 +291,9 @@ object AnonymousFeedback {
     }
 
     private fun replaceWithAuth(url: String): String? {
-        // non-authed-API requests are rate limited at 60 / hour / IP
-        // authed requests have a rate limit of 5000 / hour / account
-        // We don't want to use the authed URL by default since all users would use the same rate limit
+        // non-authed-API requests are rate limited at 60 per hour per IP
+        // authed requests have a rate limit of 5000 per hour per account.
+        // We don't want to use the authed URL by default since all users would use the same rate limit,
         // but it's a good fallback when the non-authed API stops working.
         val index = url.indexOf('?')
         if (index == -1) {

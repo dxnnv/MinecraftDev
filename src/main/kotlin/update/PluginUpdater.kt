@@ -134,7 +134,7 @@ object PluginUpdater {
                     try {
                         val status = downloader.prepareToInstall(indicator)
                         // If the download failed, quit
-                        // But otherwise force the install
+                        // But otherwise force the installation
                         if (!status && downloader.findDeclaredField("myFile") == null) {
                             return
                         }

@@ -66,8 +66,8 @@ abstract class AbstractBuildSystemStep(
         val stepUninitialized = step.isEmpty()
         super.setupUI(builder)
 
-        // if no value was previously set for the step (i.e. not saved from when the user previously used this wizard)
-        // then set the build system to the preferred one for this platform, if one exists
+        // if no value was previously set for the step (i.e., not saved from when the user previously used this wizard),
+        // then set the build system to the preferred one for this platform if one exists
         if (stepUninitialized) {
             for (buildSystem in steps.keys) {
                 if (BuildSystemSupport.getInstance(platformName, buildSystem)?.preferred == true) {

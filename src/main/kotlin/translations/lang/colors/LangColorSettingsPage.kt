@@ -33,7 +33,7 @@ class LangColorSettingsPage : ColorSettingsPage {
     override fun getAdditionalHighlightingTagToDescriptorMap() = emptyMap<String, TextAttributesKey>()
     override fun getAttributeDescriptors() = DESCRIPTORS
     override fun getColorDescriptors(): Array<out ColorDescriptor> = ColorDescriptor.EMPTY_ARRAY
-    override fun getDisplayName() = "Minecraft localization"
+    override fun getDisplayName() = "Minecraft Localization"
     override fun getDemoText() =
         """
         # This is a comment

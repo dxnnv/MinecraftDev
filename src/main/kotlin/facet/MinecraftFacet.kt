@@ -82,7 +82,7 @@ class MinecraftFacet(
             return@runWriteActionAndWait
         }
 
-        // Don't allow parent types with child types in auto detected set
+        // Don't allow parent types with child types in an auto-detected set
         val allEnabled = configuration.state.run {
             autoDetectTypes = PlatformType.removeParents(autoDetectTypes)
 
@@ -220,15 +220,15 @@ class MinecraftFacet(
     fun findFile(path: String, type: SourceType): VirtualFile? {
         try {
             return findFile0(path, type)
-        } catch (ignored: RefreshRootsException) {
+        } catch (_: RefreshRootsException) {
         }
 
         updateRoots()
 
         return try {
             findFile0(path, type)
-        } catch (ignored: RefreshRootsException) {
-            // Well we tried our best
+        } catch (_: RefreshRootsException) {
+            // Well, we tried our best
             null
         }
     }

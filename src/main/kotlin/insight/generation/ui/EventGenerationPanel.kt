@@ -26,14 +26,14 @@ import com.intellij.psi.PsiClass
 import javax.swing.JPanel
 
 /**
- * Base class for the more-info event generation panel, to be overridden by the platforms. By default this class does nothing, shows no
+ * Base class for the more-info event generation panel, to be overridden by the platforms. By default, this class does nothing, shows no
  * panel, does no validation, and gathers no data.
  */
 open class EventGenerationPanel(val chosenClass: PsiClass) {
 
     /**
      * Return the base panel for this dialog. This should be the root display element, and it should contain whatever JComponents are needed
-     * by the platform. If this method returns null then no panel will be shown.
+     * by the platform. If this method returns null, then no panel will be shown.
 
      * @return The main panel to display, or null if nothing should be displayed.
      */

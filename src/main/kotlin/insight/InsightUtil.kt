@@ -33,7 +33,7 @@ import org.jetbrains.uast.toUElementOfType
 
 val UElement.uastEventListener: Pair<UClass, UMethod>?
     get() {
-        // The PsiIdentifier is going to be a method of course!
+        // The PsiIdentifier is going to be a method, of course!
         val method = this.getParentOfType<UMethod>() ?: return null
         if (method.javaPsi.hasModifierProperty(PsiModifier.ABSTRACT)) {
             // I don't think any implementation allows for abstract method listeners.
@@ -70,10 +70,9 @@ val UMethod.uastEventParameterPair: Pair<UParameter, UClass>?
 
         // Get the type of the parameter so we can start resolving it
 
-        @Suppress("UElementAsPsi") // UVariable overrides getType so it should be fine to use on UElements...
         val type = firstParameter.type as? PsiClassType ?: return null
         // Validate that it is a class reference type
-        // And again, make sure that we can at least resolve the type, otherwise it's not a valid
+        // And again, make sure that we can at least resolve the type; otherwise it's not a valid
         // class reference.
         val resolve = type.resolve()?.toUElementOfType<UClass>() ?: return null
         return firstParameter to resolve

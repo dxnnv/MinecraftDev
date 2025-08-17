@@ -262,7 +262,7 @@ fun Module.findChildren(): Set<Module> {
     }
 }
 
-// Using the ugly TypeToken approach we can use any complex generic signature, including
+// Using the ugly TypeToken approach, we can use any complex generic signature, including
 // nested generics
 inline fun <reified T : Any> Gson.fromJson(text: String): T = fromJson(text, object : TypeToken<T>() {}.type)
 fun <T : Any> Gson.fromJson(text: String, type: KClass<T>): T = fromJson(text, type.java)
@@ -373,9 +373,9 @@ fun String.capitalize(): String =
 
 fun String.decapitalize(): String = replaceFirstChar { it.lowercase(Locale.ENGLISH) }
 
-// Bit of a hack, but this allows us to get the class object for top level declarations without having to
+// A bit of a hack, but this allows us to get the class object for top level declarations without having to
 // put the whole class name in as a string (easier to refactor, etc.)
-@Suppress("NOTHING_TO_INLINE") // In order for this to work this function must be `inline`
+@Suppress("NOTHING_TO_INLINE") // In order for this to work, this function must be `inline`
 inline fun loggerForTopLevel() = Logger.getInstance(MethodHandles.lookup().lookupClass())
 
 inline fun <T> runCatchingKtIdeaExceptions(action: () -> T): T? = try {

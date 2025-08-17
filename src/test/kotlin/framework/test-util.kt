@@ -59,7 +59,7 @@ private fun findLibrary(name: String): VirtualFile? {
     val fsRoot = StandardFileSystems.jar()
         .refreshAndFindFileByPath(findLibraryPath(name) + JarFileSystem.JAR_SEPARATOR)
     if (fsRoot != null) {
-        // force refresh every directory, it's the only way I could get intellij to behave
+        // force refresh every directory; it's the only way I could get intellij to behave
         VfsUtilCore.iterateChildrenRecursively(
             fsRoot,
             { it.isDirectory },

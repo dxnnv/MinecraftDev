@@ -18,6 +18,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+@file:Suppress("UnstableApiUsage")
+
 package com.demonwav.mcdev.creator.custom
 
 import com.demonwav.mcdev.MinecraftSettings
@@ -145,17 +147,17 @@ object CreatorCredentials {
             return null
         }
 
-        // First check credentials in IntelliJ IDEA
+        // First, check credentials in IntelliJ IDEA
         if (repoData.username.isNotBlank()) {
             val credentials = getCredentials(repoData.url, repoData.username)
-            var username = credentials?.userName
-            var password = credentials?.getPasswordAsString()
+            val username = credentials?.userName
+            val password = credentials?.getPasswordAsString()
             if (username != null && password != null) {
                 return username to password
             }
         }
 
-        // If IntelliJ doesn't have them look into the Maven settings, or Gradle properties
+        // If IntelliJ doesn't have them, look into the Maven settings, or Gradle properties
         val sourcedCredentials = findMavenServerCredentials(repoData.id) ?: findGradleRepoCredentials(repoData.id)
         if (sourcedCredentials != null) {
             return sourcedCredentials

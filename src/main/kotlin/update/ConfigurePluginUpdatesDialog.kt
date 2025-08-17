@@ -44,7 +44,7 @@ class ConfigurePluginUpdatesDialog : DialogWrapper(true) {
             channelBox = comboBox(listOf("Stable"))
         }
         row {
-            button("Check for updates now") {
+            button("Check For Updates Now") {
                 saveSettings()
                 updateCheckInProgressIcon.component.isVisible = true
                 resetUpdateStatus()

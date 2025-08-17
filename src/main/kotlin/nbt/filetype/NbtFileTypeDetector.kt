@@ -37,15 +37,15 @@ class NbtFileTypeDetector : FileTypeRegistry.FileTypeDetector {
 
         return try {
             // 20 ms is plenty of time to parse most files
-            // Won't parse very large files, but if we fail on timeout then those files probably are NBT anyways
+            // Won't parse very large files, but if we fail on timeout, then those files probably are NBT anyway
             Nbt.buildTagTree(ByteArrayInputStream(firstBytes.toBytes()), 20)
             NbtFileType
         } catch (e: Throwable) {
             when (e) {
-                // If a timeout occurred then no file structure errors were detected in the parse time, so we can
+                // If a timeout occurred, then no file structure errors were detected in the parse time, so we can
                 // probably assume it's a (very big) NBT file
                 is NbtFileParseTimeoutException -> NbtFileType
-                // If we reach the end of the stream without another error then let's assume it is a valid NBT file
+                // If we reach the end of the stream without another error, then let's assume it is a valid NBT file
                 is EOFException -> NbtFileType
                 else -> null
             }

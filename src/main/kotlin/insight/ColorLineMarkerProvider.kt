@@ -140,8 +140,8 @@ class ColorLineMarkerProvider : LineMarkerProvider {
 
             val editor = PsiEditorUtil.findEditor(psiElement) ?: return@handler
             if (JVMElementFactories.getFactory(psiElement.language, psiElement.project) == null) {
-                // The setColor methods used here require a JVMElementFactory. Unfortunately the Kotlin plugin does not
-                // implement it yet. It is better to not display the color chooser at all than deceiving users after
+                // The setColor methods used here require a JVMElementFactory. Unfortunately, the Kotlin plugin does not
+                // implement it yet. It is better to not display the color chooser at all than deceiving users
                 // after they chose a color
                 HintManager.getInstance()
                     .showErrorHint(editor, MCDevBundle("generate.color.change_error", psiElement.language.displayName))

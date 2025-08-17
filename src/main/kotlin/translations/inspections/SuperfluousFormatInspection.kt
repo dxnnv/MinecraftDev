@@ -106,7 +106,7 @@ class SuperfluousFormatInspection : TranslationInspection() {
                 descriptor.psiElement.containingFile.runWriteAction {
                     call.element?.valueArguments?.drop(position)?.forEach { it.sourcePsi?.delete() }
                 }
-            } catch (ignored: IncorrectOperationException) {
+            } catch (_: IncorrectOperationException) {
             }
         }
 

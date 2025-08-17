@@ -98,7 +98,7 @@ class TranslationIndex : FileBasedIndexExtension<String, TranslationIndexEntry>(
             getEntries(GlobalSearchScope.projectScope(project), TranslationConstants.DEFAULT_LOCALE, domain)
 
         fun getEntries(scope: GlobalSearchScope, locale: String, domain: String? = null) =
-            FileBasedIndex.getInstance().getValues(NAME, locale, scope,).asSequence()
+            FileBasedIndex.getInstance().getValues(NAME, locale, scope).asSequence()
                 .filter { domain == null || it.sourceDomain == domain }
 
         private fun Sequence<TranslationIndexEntry>.flatten() = this.flatMap { it.translations.asSequence() }

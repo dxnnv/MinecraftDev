@@ -82,7 +82,7 @@ class NoTranslationInspection : TranslationInspection() {
                 if (result != null) {
                     TranslationFiles.add(literal.sourcePsi!!, key, result)
                 }
-            } catch (ignored: IncorrectOperationException) {
+            } catch (_: IncorrectOperationException) {
             } catch (e: Exception) {
                 Notification(
                     "Translation support error",
