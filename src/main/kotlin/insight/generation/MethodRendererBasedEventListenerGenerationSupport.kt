@@ -66,10 +66,7 @@ abstract class MethodRendererBasedEventListenerGenerationSupport : EventListener
     }
 
     private fun adjustOffset(context: PsiElement, editor: Editor): Int? {
-        val declaration = context.getUastParentOfType<UDeclaration>()
-        if (declaration == null) {
-            return null
-        }
+        val declaration = context.getUastParentOfType<UDeclaration>() ?: return null
 
         if (declaration is UClass) {
             return editor.caretModel.offset

@@ -133,7 +133,7 @@ class TranslationTemplateConfigurable(private val project: Project) : Configurab
     }
 
     override fun isModified(): Boolean {
-        return templateEditor?.document?.text != getActiveTemplateText() != false || panel.isModified()
+        return templateEditor?.document?.text != getActiveTemplateText() || panel.isModified()
     }
 
     override fun apply() {

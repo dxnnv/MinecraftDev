@@ -69,7 +69,10 @@ class ParchmentCreatorProperty(
             return deserialize(raw)
         }
 
-        return ParchmentVersions(true, emptyVersion, emptyVersion, false, false)
+        return ParchmentVersions(true, emptyVersion, emptyVersion,
+            includeOlderMcVersions = false,
+            includeSnapshots = false
+        )
     }
 
     override fun serialize(value: ParchmentVersions): String {
@@ -90,7 +93,7 @@ class ParchmentCreatorProperty(
 
     override fun buildUi(panel: Panel) {
         panel.row(descriptor.translatedLabel) {
-            checkBox("Use Parchment")
+            checkBox("Use parchment")
                 .bindSelected(useParchmentProperty)
 
             comboBox(mcVersionsModel)
@@ -124,14 +127,12 @@ class ParchmentCreatorProperty(
 
         val platformMcVersionPropertyName = descriptor.parameters?.get("minecraftVersionProperty") as? String
         val platformMcVersionProperty = properties[platformMcVersionPropertyName]
-        if (platformMcVersionProperty != null) {
-            platformMcVersionProperty.graphProperty.afterChange {
-                val minecraftVersion = getPlatformMinecraftVersion()
-                if (mcVersionsModel.getIndexOf(minecraftVersion) == -1) {
-                    refreshVersionsLists(forceLatestVersions = true)
-                } else if (minecraftVersion != null) {
-                    graphProperty.set(graphProperty.get().copy(minecraftVersion = minecraftVersion))
-                }
+        platformMcVersionProperty?.graphProperty?.afterChange {
+            val minecraftVersion = getPlatformMinecraftVersion()
+            if (mcVersionsModel.getIndexOf(minecraftVersion) == -1) {
+                refreshVersionsLists(forceLatestVersions = true)
+            } else if (minecraftVersion != null) {
+                graphProperty.set(graphProperty.get().copy(minecraftVersion = minecraftVersion))
             }
         }
 

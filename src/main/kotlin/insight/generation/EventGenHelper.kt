@@ -121,7 +121,7 @@ class KotlinEventGenHelper : EventGenHelper {
     }
 
     override fun reformatAndShortenRefs(file: PsiFile, startOffset: Int, endOffset: Int) {
-        file as? KtFile ?: return
+        if (file !is KtFile) return
         val project = file.project
 
         val marker = JvmEventGenHelper.doReformat(project, file, startOffset, endOffset) ?: return

@@ -202,9 +202,7 @@ class CreatorTemplateProcessor(
         }
 
         val prop = CreatorPropertyFactory.createFromType(descriptor.type, descriptor, context)
-        if (prop == null) {
-            reporter.fatal("Unknown template property type ${descriptor.type}")
-        }
+            ?: reporter.fatal("Unknown template property type ${descriptor.type}")
 
         prop.setupProperty(reporter)
 

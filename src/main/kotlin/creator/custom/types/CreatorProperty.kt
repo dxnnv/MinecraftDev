@@ -200,11 +200,8 @@ abstract class CreatorProperty<T>(
 
         into.putAll(TemplateEvaluator.baseProperties)
 
-        return if (names == null) {
-            properties.mapValuesTo(into) { (_, prop) -> prop.get() }
-        } else {
-            names.associateWithTo(mutableMapOf()) { properties[it]?.get() }
-        }
+        return names?.associateWithTo(mutableMapOf()) { properties[it]?.get() }
+            ?: properties.mapValuesTo(into) { (_, prop) -> prop.get() }
     }
 
     protected fun collectDerivationParents(reporter: TemplateValidationReporter? = null): List<CreatorProperty<*>?>? =
@@ -242,11 +239,9 @@ abstract class CreatorProperty<T>(
             return prop
         }
 
-        var dependsOn = visibility["dependsOn"]
+        val dependsOn = visibility["dependsOn"]
         if (dependsOn !is String && (dependsOn !is List<*> || dependsOn.any { it !is String })) {
-            reporter.error(
-                "Expected 'visible' to have a 'dependsOn' value that is either a string or a list of strings"
-            )
+            reporter.error("Expected 'visible' to have a 'dependsOn' value that is either a string or a list of strings")
             return prop
         }
 
