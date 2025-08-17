@@ -32,17 +32,24 @@ import com.github.kittinunf.fuel.core.Request
 import com.github.kittinunf.fuel.core.extensions.authentication
 import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.observable.properties.GraphProperty
+import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.ui.ComboboxSpeedSearch
 import com.intellij.ui.JBColor
 import com.intellij.ui.dsl.builder.Panel
 import com.intellij.ui.dsl.builder.bindItem
 import com.intellij.ui.dsl.builder.bindText
 import com.intellij.util.ui.AsyncProcessIcon
+import java.awt.BorderLayout
 import java.util.concurrent.ConcurrentHashMap
 import java.util.function.Function
+import javax.swing.JComponent
+import javax.swing.JLabel
+import javax.swing.JPanel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.jetbrains.annotations.Nullable
+
 
 class MavenArtifactVersionCreatorProperty(
     descriptor: TemplatePropertyDescriptor,
@@ -91,7 +98,7 @@ class MavenArtifactVersionCreatorProperty(
 
         sourceUrl = url
 
-        val rawVersionFilterCondition = descriptor.parameters?.get("rawVersionFilter")
+        val rawVersionFilterCondition = descriptor.parameters["rawVersionFilter"]
         if (rawVersionFilterCondition != null) {
             if (rawVersionFilterCondition !is String) {
                 reporter.error("'rawVersionFilter' must be a string")
@@ -104,7 +111,7 @@ class MavenArtifactVersionCreatorProperty(
             }
         }
 
-        val versionFilterCondition = descriptor.parameters?.get("versionFilter")
+        val versionFilterCondition = descriptor.parameters["versionFilter"]
         if (versionFilterCondition != null) {
             if (versionFilterCondition !is String) {
                 reporter.error("'versionFilter' must be a string")
@@ -131,7 +138,26 @@ class MavenArtifactVersionCreatorProperty(
                 loadingVersionsProperty.set(false)
             }.onFailure { exception ->
                 loadingVersionsStatusProperty.set(exception.message ?: exception.javaClass.simpleName)
+                ErrorDialog(exception).show()
             }
+        }
+    }
+
+    class ErrorDialog(private val exception: Throwable) : DialogWrapper(true) {
+        init {
+            title = "Error downloading versions: ${exception.javaClass.simpleName}"
+            init()
+        }
+
+        @Nullable
+        override fun createCenterPanel(): JComponent {
+            val dialogPanel = JPanel(BorderLayout())
+
+            val message = JLabel("Exception: ${exception.toString().replace("\n", "<br />")}")
+            message.preferredSize = dialogPanel.maximumSize
+            dialogPanel.add(message, BorderLayout.CENTER)
+
+            return dialogPanel
         }
     }
 
@@ -149,7 +175,7 @@ class MavenArtifactVersionCreatorProperty(
             uiCallback: (Result<List<SemanticVersion>>) -> Unit
         ) {
             // Let's not mix up cached versions if different properties
-            // point to the same URL, but have different filters or limits
+            // point to the same URL but have different filters or limits
             val cacheKey = "$key-$url"
             val cachedVersions = versionsCache[cacheKey]
             if (cachedVersions != null) {
@@ -160,7 +186,7 @@ class MavenArtifactVersionCreatorProperty(
             val scope = context.childScope("MavenArtifactVersionCreatorProperty")
             scope.launch(Dispatchers.Default) {
                 val result = withContext(Dispatchers.IO) {
-                    var requestCustomizer = CreatorCredentials.findMavenRepoCredentials(url)?.let { (user, pass) ->
+                    val requestCustomizer = CreatorCredentials.findMavenRepoCredentials(url)?.let { (user, pass) ->
                         Function<Request, Request> { request -> request.authentication().basic(user, pass) }
                     }
 
