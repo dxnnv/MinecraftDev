@@ -18,7 +18,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import org.cadixdev.gradle.licenser.header.HeaderStyle
 import org.gradle.accessors.dm.LibrariesForLibs
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
@@ -29,7 +28,7 @@ plugins {
     idea
     id("org.jetbrains.kotlin.jvm")
     id("org.jetbrains.intellij.platform")
-    id("org.cadixdev.licenser")
+    id("dev.yumi.gradle.licenser")
 }
 
 val ideaVersionName: String by project
@@ -113,14 +112,14 @@ intellijPlatform {
     buildSearchableOptions = false
 }
 
-license {
-    header.set(resources.text.fromFile(rootProject.layout.projectDirectory.file("copyright.txt")))
-    style["flex"] = HeaderStyle.BLOCK_COMMENT.format
-    style["bnf"] = HeaderStyle.BLOCK_COMMENT.format
-
-    val endings = listOf("java", "kt", "kts", "groovy", "gradle.kts", "xml", "properties", "html", "flex", "bnf")
-    include(endings.map { "**/*.$it" })
-}
+//license {
+//    header.set(resources.text.fromFile(rootProject.layout.projectDirectory.file("copyright.txt")))
+//    style["flex"] = HeaderStyle.BLOCK_COMMENT.format
+//    style["bnf"] = HeaderStyle.BLOCK_COMMENT.format
+//
+//    val endings = listOf("java", "kt", "kts", "groovy", "gradle.kts", "xml", "properties", "html", "flex", "bnf")
+//    include(endings.map { "**/*.$it" })
+//}
 
 idea {
     module {
@@ -146,5 +145,5 @@ tasks.test {
 tasks.register("format") {
     group = "minecraft"
     description = "Formats source code according to project style"
-    dependsOn(tasks.licenseFormat)
+//    dependsOn(tasks.licenseFormat)
 }
