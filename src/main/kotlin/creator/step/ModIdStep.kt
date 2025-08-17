@@ -59,7 +59,7 @@ abstract class AbstractModIdStep(
     fun suggestId(): String {
         val sanitized = baseData.name.lowercase().replace(invalidRegex, "_")
         if (sanitized.length > 64) {
-            return sanitized.substring(0, 64)
+            return sanitized.take(64)
         }
         return sanitized
     }

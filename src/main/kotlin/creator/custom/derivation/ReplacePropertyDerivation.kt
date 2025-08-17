@@ -42,7 +42,7 @@ class ReplacePropertyDerivation(
 
         sanitized = sanitized.replace(regex, replacement)
         if (maxLength != null && sanitized.length > maxLength) {
-            return sanitized.substring(0, maxLength)
+            return sanitized.take(maxLength)
         }
 
         return sanitized

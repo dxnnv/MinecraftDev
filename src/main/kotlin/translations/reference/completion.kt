@@ -89,7 +89,7 @@ class JsonCompletionContributor : TranslationCompletionContributor() {
         val text = getKey(position)
         if (text != null) {
             val domain = file.mcDomain
-            handleKey(text.substring(0, text.length - CompletionUtil.DUMMY_IDENTIFIER.length), position, domain, result)
+            handleKey(text.take(text.length - CompletionUtil.DUMMY_IDENTIFIER.length), position, domain, result)
         }
     }
 

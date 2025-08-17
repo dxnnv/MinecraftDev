@@ -151,7 +151,7 @@ fun findQualifiedClass(
         return outerResolver(fullQualifiedName)
     }
 
-    var currentClass = outerResolver(fullQualifiedName.substring(0, innerPos)) ?: return null
+    var currentClass = outerResolver(fullQualifiedName.take(innerPos)) ?: return null
     var outerPos: Int
 
     while (true) {

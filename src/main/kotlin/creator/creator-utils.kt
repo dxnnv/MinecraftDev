@@ -81,7 +81,7 @@ fun splitPackage(text: String): Pair<String?, String> {
     }
 
     val className = text.substring(index + 1)
-    val packageName = text.substring(0, index)
+    val packageName = text.take(index)
     return packageName to className
 }
 

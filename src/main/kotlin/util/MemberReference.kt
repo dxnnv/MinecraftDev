@@ -106,7 +106,7 @@ data class MemberReference(
             var pos = reference.lastIndexOf('.')
             if (pos != -1) {
                 // Everything before the dot is the qualifier/owner
-                owner = reference.substring(0, pos).replace('/', '.')
+                owner = reference.take(pos).replace('/', '.')
             } else {
                 pos = reference.indexOf(';')
                 if (pos != -1 && reference.startsWith('L')) {

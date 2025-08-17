@@ -157,7 +157,7 @@ class SemanticVersion(
                     return null
                 }
 
-                val shortYear = value.substring(0, 2).toIntOrNull() ?: return null
+                val shortYear = value.take(2).toIntOrNull() ?: return null
                 val week = value.substring(3, 5).toIntOrNull() ?: return null
 
                 val subParts = listOf(ReleasePart(week, week.toString()), TextPart(value[5].toString()))
