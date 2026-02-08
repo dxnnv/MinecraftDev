@@ -95,6 +95,12 @@ class MinecraftConfigurable : Configurable {
                 .comment(MCDevBundle("minecraft.settings.force_external_annotations.comment"))
         }.bottomGap(BottomGap.SMALL)
 
+        row {
+            checkBox(MCDevBundle("minecraft.settings.force_external_annotations"))
+                .bindSelected(settings::forceExternalAnnotations)
+                .comment(MCDevBundle("minecraft.settings.force_external_annotations.comment"))
+        }.bottomGap(BottomGap.SMALL)
+
         group(indent = false) {
             row(MCDevBundle("minecraft.settings.chat_color_underline_style")) {
                 comboBox(EnumComboBoxModel(MinecraftSettings.UnderlineType::class.java))

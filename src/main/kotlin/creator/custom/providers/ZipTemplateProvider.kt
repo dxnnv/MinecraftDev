@@ -83,7 +83,6 @@ class ZipTemplateProvider : TemplateProvider {
                         }
                     )
             }
-
             onApply {
                 dataSetter(pathProperty.get())
             }
